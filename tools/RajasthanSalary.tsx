@@ -474,7 +474,7 @@ const RajasthanSalary: React.FC = () => {
                       }} 
                       className="w-full bg-teal-50 border border-teal-100 rounded-2xl p-4 text-sm font-black text-teal-700 outline-none focus:ring-4 ring-teal-50 transition-all cursor-pointer appearance-none"
                     >
-                      <option value="probationer">Probationer Trainee Fixed Pay - ₹{(PROBATIONER_PAY_MAP[salary.level] || 12400).toLocaleString('en-IN')}</option>
+                      <option value="probationer">Probationer Pay - ₹{(PROBATIONER_PAY_MAP[salary.level] || 12400).toLocaleString('en-IN')}</option>
                       {(PAY_MATRIX[salary.level] || []).map((pay, idx) => (
                         <option key={pay} value={pay}>Regular Year {idx + 1} - ₹{pay.toLocaleString('en-IN')}</option>
                       ))}

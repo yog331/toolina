@@ -1,0 +1,8 @@
+name = "toolina"
+pages_build_output_dir = "dist"
+compatibility_date = "2024-04-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "toolina-db"
+database_id = "2d49f8f3-aaae-431f-93eb-79fcddea3f3d" # Replace with your actual D1 database ID

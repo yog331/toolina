@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /privacy-policy-raj-salary-app
+
+Sitemap: https://toolina.in/sitemap.xml

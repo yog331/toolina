@@ -13,6 +13,8 @@ import { Tool } from './types';
 // Tool Components
 const AgeCalculator = React.lazy(() => import('./tools/AgeCalculator'));
 const BMICalculator = React.lazy(() => import('./tools/BMICalculator'));
+const TDEECalculator = React.lazy(() => import('./tools/TDEECalculator'));
+const BoxBreathing = React.lazy(() => import('./tools/BoxBreathing'));
 const CSVToJson = React.lazy(() => import('./tools/CSVToJson'));
 const QRGenerator = React.lazy(() => import('./tools/QRGenerator'));
 const BarcodeGenerator = React.lazy(() => import('./tools/BarcodeGenerator'));
@@ -121,6 +123,8 @@ const App: React.FC = () => {
                 <Route path="/" element={<Dashboard searchTerm={searchTerm} tools={tools} />} />
                 <Route path="/chronological-age-calculator" element={<AgeCalculator />} />
                 <Route path="/body-mass-index-bmi-calculator" element={<BMICalculator />} />
+                <Route path="/tdee-and-macronutrient-target-calculator" element={<TDEECalculator />} />
+                <Route path="/box-breathing-stress-relief-guide" element={<BoxBreathing />} />
                 <Route path="/csv-to-json-converter" element={<CSVToJson />} />
                 <Route path="/qr-code-generator" element={<QRGenerator />} />
                 <Route path="/barcode-generator" element={<BarcodeGenerator />} />
@@ -178,6 +182,8 @@ const App: React.FC = () => {
                 <Route path="/remove-pdf-pages" element={<Navigate to="/remove-pdf-pages-delete-securely" replace />} />
                 <Route path="/add-pdf-watermark" element={<Navigate to="/add-watermark-to-pdf-online" replace />} />
                 <Route path="/url-indexing" element={<Navigate to="/google-indexing-api-bulk-submitter" replace />} />
+                <Route path="/tdee-calc" element={<Navigate to="/tdee-and-macronutrient-target-calculator" replace />} />
+                <Route path="/box-breathing" element={<Navigate to="/box-breathing-stress-relief-guide" replace />} />
                 
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/privacy-policy-raj-salary-app" element={<PrivacyPolicyRajSalaryApp />} />

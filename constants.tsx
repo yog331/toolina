@@ -94,6 +94,24 @@ export const TOOLS: Tool[] = [
     isNew: false
   },
   {
+    id: 'tdee-calc',
+    name: 'TDEE & Macronutrient Calculator',
+    description: 'Calculate your Total Daily Energy Expenditure (TDEE), resting metabolic rate, and customized protein, carb, and fat targets based on your goals.',
+    icon: '🔥',
+    category: 'Health',
+    path: '/tdee-and-macronutrient-target-calculator',
+    isNew: true
+  },
+  {
+    id: 'box-breathing',
+    name: 'Box Breathing & Stress Relief Guide',
+    description: 'Relieve stress, lower anxiety, and improve focus with guided Box Breathing, Andrew Weil 4-7-8 cycles, and resonant frequency timers.',
+    icon: '🌬️',
+    category: 'Health',
+    path: '/box-breathing-stress-relief-guide',
+    isNew: true
+  },
+  {
     id: 'utility-bill',
     name: 'Utility Bill Calculator',
     description: 'Tiered slab calculator for electricity, water, and gas bills with detailed tax and fixed charge audit.',

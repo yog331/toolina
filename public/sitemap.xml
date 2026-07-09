@@ -56,6 +56,16 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://toolina.in/tdee-and-macronutrient-target-calculator</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://toolina.in/box-breathing-stress-relief-guide</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://toolina.in/electricity-water-utility-bill-calculator</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -131,6 +141,11 @@
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://toolina.in/unlock-pdf-remove-password</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://toolina.in/online-word-counter</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -154,5 +169,40 @@
     <loc>https://toolina.in/rajasthan-lease-deed-stamp-duty-calculator</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://toolina.in/privacy</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://toolina.in/privacy-policy-raj-salary-app</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://toolina.in/terms</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://toolina.in/disclaimer</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://toolina.in/contact</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://toolina.in/help</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://toolina.in/sitemap</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
   </url>
 </urlset>

@@ -152,6 +152,7 @@ const App: React.FC = () => {
                 <Route path="/compress-pdf-reduce-file-size" element={<PdfSuite defaultTool="compress-pdf" />} />
                 <Route path="/remove-pdf-pages-delete-securely" element={<PdfSuite defaultTool="remove-pdf-pages" />} />
                 <Route path="/add-watermark-to-pdf-online" element={<PdfSuite defaultTool="add-pdf-watermark" />} />
+                <Route path="/unlock-pdf-remove-password" element={<PdfSuite defaultTool="unlock-pdf" />} />
 
                 {/* Permanent Redirects for Old Slugs to retain SEO Ranking */}
                 <Route path="/age-calc" element={<Navigate to="/chronological-age-calculator" replace />} />
@@ -181,6 +182,7 @@ const App: React.FC = () => {
                 <Route path="/compress-pdf" element={<Navigate to="/compress-pdf-reduce-file-size" replace />} />
                 <Route path="/remove-pdf-pages" element={<Navigate to="/remove-pdf-pages-delete-securely" replace />} />
                 <Route path="/add-pdf-watermark" element={<Navigate to="/add-watermark-to-pdf-online" replace />} />
+                <Route path="/unlock-pdf" element={<Navigate to="/unlock-pdf-remove-password" replace />} />
                 <Route path="/url-indexing" element={<Navigate to="/google-indexing-api-bulk-submitter" replace />} />
                 <Route path="/tdee-calc" element={<Navigate to="/tdee-and-macronutrient-target-calculator" replace />} />
                 <Route path="/box-breathing" element={<Navigate to="/box-breathing-stress-relief-guide" replace />} />

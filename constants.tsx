@@ -281,5 +281,14 @@ export const TOOLS: Tool[] = [
     category: 'PDF Tools',
     path: '/add-watermark-to-pdf-online',
     isNew: true
+  },
+  {
+    id: 'unlock-pdf',
+    name: 'Unlock PDF',
+    description: 'Remove password and security constraints from encrypted PDFs (Aadhaar cards, bank statements) securely offline.',
+    icon: '🔓',
+    category: 'PDF Tools',
+    path: '/unlock-pdf-remove-password',
+    isNew: true
   }
 ];

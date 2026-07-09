@@ -20,6 +20,7 @@ import RemovePDFPages from './RemovePDFPages';
 import AddWatermarkPDF from './AddWatermarkPDF';
 import PDFToImage from './PDFToImage';
 import ImageToPDF from './ImageToPDF';
+import UnlockPDF from './UnlockPDF';
 
 interface PDFToolConfig {
   id: string;
@@ -102,6 +103,16 @@ const PDF_TOOLS_LIST: PDFToolConfig[] = [
     color: 'from-fuchsia-500 to-pink-600',
     tagline: 'Convert images to PDF',
     component: ImageToPDF
+  },
+  {
+    id: 'unlock-pdf',
+    name: 'Unlock PDF',
+    path: '/unlock-pdf-remove-password',
+    icon: '🔓',
+    description: 'Remove password and restriction constraints from encrypted PDFs (Aadhaar, bank statements) securely offline.',
+    color: 'from-amber-500 to-yellow-600',
+    tagline: 'Remove PDF Password',
+    component: UnlockPDF
   }
 ];
 

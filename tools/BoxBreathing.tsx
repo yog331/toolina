@@ -372,6 +372,8 @@ const BoxBreathing: React.FC = () => {
       <SEO 
         title="Box Breathing & Stress Relief Guide - Deep Relaxation Timer" 
         description="Release stress and focus your mind with our interactive Box Breathing Guide. Clean, customizable pacing with medical benefits and local session logger." 
+        url="https://toolina.in/box-breathing-stress-relief-guide"
+        keywords="box breathing, stress relief breathing, anxiety relief guide, breathing exercise kaise kare, chinta dur karne ke upay, stress kam karne ke liye pranayam, anxiety relief breathing in hindi, box breathing exercise kya hai, lambi saans lene ke fayde, dhyan lagane ka tarika, mann shant karne ka tarika, deep breathing exercise hindi, navy seal breathing technique hindi"
         structuredData={{
           "@context": "https://schema.org",
           "@type": "SoftwareApplication",
@@ -733,6 +735,61 @@ const BoxBreathing: React.FC = () => {
 
         </div>
 
+      </section>
+
+      {/* Hinglish Guide for high-intent SEO search queries */}
+      <section className="bg-white p-8 md:p-12 rounded-[2.5rem] border border-slate-200 space-y-8 shadow-xl shadow-slate-100/30">
+        <div className="text-center max-w-2xl mx-auto space-y-2">
+          <h3 className="text-2xl md:text-3xl font-display font-black text-slate-900 tracking-tight">
+            Hindi & Hinglish Guide: <span className="text-emerald-600">Stress Aur Anxiety Kam Kaise Karein?</span>
+          </h3>
+          <p className="text-xs text-slate-500 font-medium">Box breathing technique, stress relief aur deep breathing exercises ke fayde:</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+          <div className="space-y-4">
+            <h4 className="text-base font-black text-slate-800 flex items-center gap-2">
+              🧘‍♂️ Breathing Exercise Kaise Karein (Pranayam Tarika)?
+            </h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Deep breathing ya pranayam karne ke liye sabse pehle kisi shant jagah par dhyan laga kar baith jayein. Apne dono hath ghutno par rakhein, aakhein band karein aur humare screen par chalte huye circular timer ko follow karein. Isme inhales (saans andar khinchne), holds (saans rokne), aur exhales (saans bahar chodne) ke complete blocks ko follow karna hota hai.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-base font-black text-slate-800 flex items-center gap-2">
+              ⚓ Box Breathing Exercise Kya Hai (Navy Seal Technique)?
+            </h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              <strong>Box Breathing</strong> ko "Square Breathing" bhi kaha jata hai kyunki isme char barabar steps hote hain: 4 second saans andar khinchein, 4 second saans rokein, 4 second me saans bahar chodein, aur fir 4 second khali pet rokein. Is powerful navy seal technique ka use US military elite forces apne dimag ko extreme pressure me shant aur focused rakhne ke liye karte hain.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-base font-black text-slate-800 flex items-center gap-2">
+              🌿 Lambi Saans (Deep Breathing) Lene Ke Fayde Kya Hain?
+            </h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Scientific study ke anusar jab aap lambi aur gehri saans lete hain toh aapki body me parasympathetic nervous system activate ho jata hai. Isse stress hormone (Cortisol) kam hota hai, high blood pressure stable hota hai, heart rate normal hoti hai aur pure shareer me oxygen ki matra badhti hai.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-base font-black text-slate-800 flex items-center gap-2">
+              🌌 Anxiety Aur Chinta Dur Karne Ke Upay:
+            </h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Jab bhi aapko panic attack ya darr, ghabrahat (anxiety) feel ho, toh turant humare <strong>7-11 Panic Relief</strong> preset ya fir <strong>4-7-8 Calming Breath</strong> ko select karke 3 se 5 minutes tak practice karein. Lambi exhalation (saans bahar nikalna) hamare brain ko safety signal bhejti hai jisse anxiety instant gayab ho jati hai.
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-emerald-50/50 border border-emerald-100 p-6 rounded-3xl mt-6">
+          <h4 className="text-xs font-black uppercase text-emerald-700 mb-2 tracking-wider">💡 Dhyan & Meditation Tips:</h4>
+          <p className="text-xs text-slate-600 leading-relaxed">
+            Mann shant karne ke liye subah ya sone se pehle sirf 5-10 minute ka guided breathing dhyan lagane me madad karta hai. Is website par aap offline mode me bina kisi internet connection ke bilkul muft me apne hisab se breathing speed set karke relaxation practice kar sakte hain!
+          </p>
+        </div>
       </section>
 
       <section className="grid grid-cols-1 md:grid-cols-2 gap-8">

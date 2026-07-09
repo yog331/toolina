@@ -301,6 +301,8 @@ const TDEECalculator: React.FC = () => {
       <SEO 
         title="TDEE & Macronutrient Target Calculator - Precise Fitness Planner" 
         description="Calculate your Total Daily Energy Expenditure (TDEE), BMR, and macronutrient targets (protein, fat, carbs) based on your custom weight loss or muscle building goals. High-accuracy fit calculator." 
+        url="https://toolina.in/tdee-and-macronutrient-target-calculator"
+        keywords="tdee calculator, macro calculator, calorie calculator, daily kitni calories chahiye, calorie calculator hindi, vajan ghatane ke liye kitni calorie chahiye, weight loss calorie calculator hindi, daily calorie burn calculator in hindi, apna maintenance calorie kaise nikale, tdee calculator hindi, protein carbs fat kitna khaye, diet plan banane ka tarika, calorie intake kaise count kare, weight gain calorie calculator hindi"
         structuredData={{
           "@context": "https://schema.org",
           "@type": "SoftwareApplication",
@@ -992,6 +994,61 @@ const TDEECalculator: React.FC = () => {
         </div>
       </footer>
     
+      {/* Hinglish Guide for high-intent SEO search queries */}
+      <section className="bg-white p-8 md:p-12 rounded-[2.5rem] border border-slate-200 space-y-8 shadow-xl shadow-slate-100/30">
+        <div className="text-center max-w-2xl mx-auto space-y-2">
+          <h3 className="text-2xl md:text-3xl font-display font-black text-slate-900 tracking-tight">
+            Hindi & Hinglish Guide: <span className="text-rose-600">Daily Kitni Calories Chahiye?</span>
+          </h3>
+          <p className="text-xs text-slate-500 font-medium">Calorie intake calculation, weight loss aur muscle building ke liye simple guide:</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+          <div className="space-y-4">
+            <h4 className="text-base font-black text-slate-800 flex items-center gap-2">
+              📌 TDEE Kya Hota Hai Aur Ise Kaise Samjhein?
+            </h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              <strong>TDEE (Total Daily Energy Expenditure)</strong> ka matlab hai ki aap pure din me total kitni calories burn karte hain. Isme aapki breathing, blood circulation (BMR) ke sath-sath chalna, firna, ghar ke kaam aur gym exercises sab shamil hain. Agar aapko apna vajan control me rakhna hai, toh aapko TDEE ke barabar hi khana khana chahiye.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-base font-black text-slate-800 flex items-center gap-2">
+              🥗 Weight Loss Ke Liye Kitni Calorie Khayein?
+            </h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Agar aapka goal weight loss (vajan ghatana) hai, toh aapko apne TDEE se thoda kam khana padega, jise <strong>Caloric Deficit</strong> kehte hain. Sabse safe aur asar-dar tarika hai ki aap apne daily burn (TDEE) se 300 se 500 calories kam khayein. Isse bina kisi kamzori ke dhire-dhire healthy fat loss hoga.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-base font-black text-slate-800 flex items-center gap-2">
+              💪 Weight Gain Aur Muscle Building Ke Liye Kitni Calories Chahiye?
+            </h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Muscle build karne ya vajan badhane ke liye aapko apne TDEE se zyada khana padta hai, jise <strong>Caloric Surplus</strong> kehte hain. Aapko daily burn se 300-500 extra clean calories khani chahiye, aur sath me achhi protein-rich diet (jaise paneer, dal, soya, eggs, ya chicken) aur strength training karni chahiye.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-base font-black text-slate-800 flex items-center gap-2">
+              🔑 Protein, Carbs Aur Fat Kitna Hona Chahiye?
+            </h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Diet plan banane ke liye sirf calorie nahi, balki macronutrients ka split bhi sahi hona chahiye. Is calculator me humne <strong>Balanced</strong>, <strong>High Protein</strong> (muscle building ke liye) aur <strong>Keto / Low Carb</strong> presets diye hain. Aap apni diet ke hisab se gram count kar ke roti, chawal, aur proteins ko target kar sakte hain.
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-rose-50/50 border border-rose-100 p-6 rounded-3xl mt-6">
+          <h4 className="text-xs font-black uppercase text-rose-700 mb-2 tracking-wider">💡 Indian Diet Calorie Tips:</h4>
+          <p className="text-xs text-slate-600 leading-relaxed">
+            Ek normal medium-size roti me lagbhag 80-100 calories hoti hain, 1 katori chawal me 150-180 calories, aur 1 katori dal me 100-120 calories hoti hain. Humare free calorie calculator ka use karke aap asani se apna custom macro target sets kar sakte hain aur online bina kisi fees ke apna perfect diet plan design kar sakte hain!
+          </p>
+        </div>
+      </section>
+
       <AccompanyingText 
         toolName="TDEE & Macronutrient Target Calculator"
         howItWorks="This high-accuracy health planner utilizes client-side algorithms like the Mifflin-St Jeor, Revised Harris-Benedict, and Katch-McArdle formulas to compute resting metabolism. It combines your parameters with standard physical activity level (PAL) multipliers to determine total daily expenditure and map out calorie targets with safe thresholds."

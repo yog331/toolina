@@ -48,7 +48,7 @@ const ImageConverter: React.FC = () => {
   useEffect(() => {
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) {
-      metaDescription.setAttribute("content", "Fast batch image converter and bulk photo resizer. Convert to WebP, JPG, or PNG for free. Perfect for passport size photos and government job applications. Privacy-focused browser processing.");
+      metaDescription.setAttribute("content", "Free Batch Image Converter & Resizer. Convert HEIC to JPG, PNG to JPG, JPG to WebP, WebP to PNG, JPEG, GIF, BMP, HEIF in bulk. Offline processing, passport crop, custom quality & dimension settings.");
     }
   }, []);
 
@@ -65,30 +65,89 @@ const ImageConverter: React.FC = () => {
   const [editingImage, setEditingImage] = useState<ImageFile | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFiles = (fileList: FileList | null) => {
+  const handleFiles = async (fileList: FileList | null) => {
     if (!fileList) return;
-    const newImages: ImageFile[] = [];
-    Array.from(fileList).forEach(file => {
-      if (!file.type.startsWith('image/')) return;
+    const filesArray = Array.from(fileList);
+    
+    for (const file of filesArray) {
+      const isHeic = file.name.toLowerCase().endsWith('.heic') || 
+                     file.name.toLowerCase().endsWith('.heif') || 
+                     file.type === 'image/heic' || 
+                     file.type === 'image/heif';
+                     
+      if (!file.type.startsWith('image/') && !isHeic) continue;
+      
       const id = Math.random().toString(36).substring(7);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const dataUrl = e.target?.result as string;
-        const img = new Image();
-        img.onload = () => {
+      
+      // Push an initial file structure to state
+      const initialImage: ImageFile = {
+        id,
+        file,
+        name: file.name.split('.')[0],
+        preview: '',
+        status: isHeic ? 'processing' : 'pending',
+        originalWidth: 0,
+        originalHeight: 0,
+        rotation: 0
+      };
+      
+      setImages(prev => [...prev, initialImage]);
+      
+      try {
+        let fileToProcess = file;
+        
+        if (isHeic) {
+          // Dynamically import heic2any for conversion
+          // @ts-ignore
+          const heic2anyModule = await import('heic2any');
+          const heic2any = heic2anyModule.default;
+          
+          const convertedBlob = await heic2any({
+            blob: file,
+            toType: 'image/jpeg',
+            quality: 0.9
+          });
+          
+          const singleBlob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+          
+          fileToProcess = new File([singleBlob], file.name.replace(/\.(heic|heif)$/i, '.jpg'), {
+            type: 'image/jpeg'
+          });
+          
+          // Update file reference and name in state
           setImages(prev => prev.map(item => 
-            item.id === id ? { ...item, originalWidth: img.width, originalHeight: img.height } : item
+            item.id === id ? { ...item, file: fileToProcess, name: fileToProcess.name.split('.')[0] } : item
+          ));
+        }
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const dataUrl = e.target?.result as string;
+          const img = new Image();
+          img.onload = () => {
+            setImages(prev => prev.map(item => 
+              item.id === id ? { 
+                ...item, 
+                originalWidth: img.width, 
+                originalHeight: img.height,
+                status: 'pending' // reset to pending so it can be batch processed
+              } : item
+            ));
+          };
+          img.src = dataUrl;
+          setImages(prev => prev.map(item => 
+            item.id === id ? { ...item, preview: dataUrl } : item
           ));
         };
-        img.src = dataUrl;
-        setImages(prev => prev.map(item => item.id === id ? { ...item, preview: dataUrl } : item));
-      };
-      reader.readAsDataURL(file);
-      newImages.push({
-        id, file, name: file.name.split('.')[0], preview: '', status: 'pending', originalWidth: 0, originalHeight: 0, rotation: 0
-      });
-    });
-    setImages(prev => [...prev, ...newImages]);
+        reader.readAsDataURL(fileToProcess);
+        
+      } catch (err) {
+        console.error('Failed to convert/load HEIC image:', err);
+        setImages(prev => prev.map(item => 
+          item.id === id ? { ...item, status: 'error' } : item
+        ));
+      }
+    }
   };
 
   const removeImage = (id: string) => setImages(prev => prev.filter(img => img.id !== id));
@@ -173,12 +232,37 @@ const ImageConverter: React.FC = () => {
 
   const downloadSingle = (img: ImageFile, index: number) => {
     if (!img.result) return;
-    const link = document.createElement('a');
-    link.href = img.result;
-    link.download = formatFilename(img, index);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      const arr = img.result.split(',');
+      const match = arr[0].match(/:(.*?);/);
+      if (!match) return;
+      const mime = match[1];
+      const bstr = atob(arr[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      const blob = new Blob([u8arr], { type: mime });
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = formatFilename(img, index);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error("Download failed:", e);
+      // Fallback
+      const link = document.createElement('a');
+      link.href = img.result;
+      link.download = formatFilename(img, index);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   const downloadZip = async () => {
@@ -194,11 +278,11 @@ const ImageConverter: React.FC = () => {
 
   return (
     <article className="max-w-7xl mx-auto space-y-6 md:space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-700">
-      <SEO title="Batch Image Converter & Bulk Photo Resizer Online - Toolina" description="Free professional calculator and internal tool by Toolina. Accurate, fast, and easy to use." 
+      <SEO title="Bulk Image Converter: Convert PNG, JPG, WebP, HEIC, GIF, BMP Online - Toolina" description="Free batch image converter & resizer. Convert HEIC to JPG, JPG to WebP, PNG to JPG, WebP to PNG, GIF, BMP in bulk. Adjust quality, crop passport photos offline securely in your browser." 
         structuredData={{
           "@context": "https://schema.org",
           "@type": "SoftwareApplication",
-          "name": "Batch Image Converter & Bulk Photo Resizer Online - Toolina",
+          "name": "Bulk Image Converter: Convert PNG, JPG, WebP, HEIC, GIF, BMP Online - Toolina",
           "applicationCategory": "DeveloperApplication",
           "operatingSystem": "All",
           "aggregateRating": {
@@ -360,9 +444,9 @@ const ImageConverter: React.FC = () => {
               <div className="w-16 h-16 md:w-20 md:h-20 bg-slate-50 rounded-[1.5rem] flex items-center justify-center text-3xl md:text-5xl group-hover:scale-110 transition-transform shadow-inner duration-500">📤</div>
               <div className="space-y-1">
                 <p className="text-lg md:text-xl font-display font-black text-slate-800">Bulk Upload Images</p>
-                <p className="text-slate-400 font-medium text-xs uppercase tracking-widest">Supports JPG, PNG, WEBP, GIF, BMP</p>
+                <p className="text-slate-400 font-medium text-xs uppercase tracking-widest">Supports JPG, PNG, WEBP, HEIC/HEIF, GIF, BMP</p>
               </div>
-              <input type="file" multiple className="hidden" ref={fileInputRef} accept="image/*" onChange={(e) => { handleFiles(e.target.files); e.target.value = ''; }} />
+              <input type="file" multiple className="hidden" ref={fileInputRef} accept="image/*,.heic,.heif" onChange={(e) => { handleFiles(e.target.files); e.target.value = ''; }} />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 min-h-[300px] max-h-[500px] overflow-y-auto pr-2 scrollbar-hide pb-8 relative">
@@ -420,79 +504,117 @@ const ImageConverter: React.FC = () => {
       </header>
 
       {/* SEO Optimized Content Section */}
-      <footer className="bg-slate-900 rounded-[2.5rem] p-8 md:p-16 text-white space-y-12 overflow-hidden relative">
+      <footer className="bg-slate-900 rounded-[2.5rem] p-8 md:p-16 text-white space-y-16 overflow-hidden relative">
         <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_top_right,rgba(20,184,166,0.1),transparent)] pointer-events-none"></div>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start relative z-10">
           <div className="space-y-6">
             <h2 className="text-3xl md:text-4xl font-display font-black tracking-tight leading-tight">
-              Best <span className="text-teal-400">Bulk Image Tools</span> for Govt Forms & Fast Websites
+              Best <span className="text-teal-400">Batch Image Converter</span> & Bulk Photo Resizer Online
             </h2>
-            <p className="text-slate-400 leading-relaxed">
-              Toolina provides a professional-grade <strong>batch image converter</strong> designed for speed and privacy. Unlike other online tools, we process your photos entirely in your browser. Your sensitive documents, signatures, and personal photos <strong>never upload to any server</strong>, ensuring 100% data security.
+            <p className="text-slate-400 leading-relaxed text-sm">
+              Toolina offers a high-performance, professional-grade <strong>bulk image converter</strong> designed to resize, compress, and rotate multiple photos simultaneously. We prioritize your privacy above all: unlike standard online services, all image transformations are executed <strong>100% client-side inside your browser</strong>. Your private pictures, passport photos, and signatures are never uploaded to any remote server.
             </p>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-white/5 p-4 rounded-2xl border border-white/10">
-                <h3 className="text-teal-400 font-bold text-sm mb-1 uppercase tracking-widest">Passport Size</h3>
-                <p className="text-[10px] text-slate-500">Instant cropping for 3.5x4.5cm and US Visa specs.</p>
+                <h3 className="text-teal-400 font-bold text-sm mb-1 uppercase tracking-widest">Passport & Visa Spec</h3>
+                <p className="text-[10px] text-slate-400 leading-normal">Interactive cropping for standard 3.5x4.5cm and US Visa specs, perfect for SSO Rajasthan and Central govt application portals.</p>
               </div>
               <div className="bg-white/5 p-4 rounded-2xl border border-white/10">
-                <h3 className="text-teal-400 font-bold text-sm mb-1 uppercase tracking-widest">WebP Optimize</h3>
-                <p className="text-[10px] text-slate-500">Reduce file size by up to 80% with quality sliders.</p>
+                <h3 className="text-teal-400 font-bold text-sm mb-1 uppercase tracking-widest">Next-Gen WebP Engine</h3>
+                <p className="text-[10px] text-slate-400 leading-normal">Reduce PNG or JPG image file sizes by up to 80% using our multi-threaded batch compression with high-fidelity quality sliders.</p>
               </div>
             </div>
           </div>
 
-          <div className="space-y-8">
-            <div className="space-y-4">
-              <h3 className="text-lg font-black uppercase tracking-widest text-slate-300">Why use Toolina Image Resizer?</h3>
-              <ul className="space-y-3">
-                {[
-                  "Bulk process hundreds of images at once.",
-                  "Interactive cropping for specific aspect ratios (1:1, 16:9, etc.)",
-                  "Rotate images and batch resize by pixels or percentage.",
-                  "Perfect for Rajasthan and Central Govt application photos.",
-                  "Zero data collection - works offline after loading."
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-3 text-sm text-slate-400">
-                    <span className="w-1.5 h-1.5 bg-teal-500 rounded-full mt-1.5 shrink-0"></span>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
+          <div className="space-y-6">
+            <h3 className="text-lg font-black uppercase tracking-widest text-slate-300">Why Use Toolina Image Resizer?</h3>
+            <ul className="space-y-3">
+              {[
+                "Bulk processing capability: convert hundreds of photos in a single click.",
+                "All-in-one suite: Batch resize, rotate, crop, compress, and rename images simultaneously.",
+                "Supported format outputs: PNG, JPEG (JPG), WEBP, GIF, and BMP formats.",
+                "Advanced input formats: Full client-side decoding support for Apple HEIC & HEIF photos.",
+                "Fully interactive visual crop helper featuring customizable aspect ratio presets.",
+                "Perfect for student applications, professional bloggers, and web developers needing optimized assets.",
+                "Zero data collection: works seamlessly offline on any modern device."
+              ].map((item, i) => (
+                <li key={i} className="flex items-start gap-3 text-sm text-slate-400">
+                  <span className="w-1.5 h-1.5 bg-teal-500 rounded-full mt-1.5 shrink-0"></span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* Dedicated Supported Conversions Table/Grid */}
+        <div className="pt-12 border-t border-white/10 relative z-10 space-y-6">
+          <div className="text-center max-w-2xl mx-auto space-y-2">
+            <h3 className="text-2xl font-black text-slate-100 tracking-tight">Exhaustive Support For File Type Conversions</h3>
+            <p className="text-xs text-slate-400">Our engine supports instantaneous bidirectional conversion across all major image extensions:</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {[
+              { title: "HEIC / HEIF to JPG / PNG", desc: "Batch decode Apple's modern high-efficiency HEIC photos from iPhones or iPads into widely-supported JPG or PNG files locally in your browser." },
+              { title: "PNG to JPG / JPEG", desc: "Convert lossless PNG screenshots, logos, and illustrations to compressed JPG/JPEG formats for standard document applications." },
+              { title: "JPG to WebP Optimizer", desc: "Convert standard JPEGs to next-gen WebP to satisfy Core Web Vitals and speed up website page load speeds." },
+              { title: "PNG to WebP Converter", desc: "Batch transform heavy transparent PNG files into optimized WebP formats while preserving transparency features." },
+              { title: "WebP to JPG / PNG", desc: "Revert modern web-only WebP files back to classic JPG or PNG for offline editors, printers, and legacy applications." },
+              { title: "GIF to JPG / PNG / WebP", desc: "Extract the static frames of a GIF image or transform animations into compatible modern file sizes." },
+              { title: "BMP to JPG / PNG / WebP", desc: "Instantly compress large uncompressed raw Windows Bitmap files into ready-to-share standard extensions." },
+              { title: "Bulk Image Resizing", desc: "Scale resolutions down by exact pixel counts or scale relative percentage values while locking the aspect ratio." },
+              { title: "Dynamic Naming Engine", desc: "Use advanced placeholder strings like [name], [index], [date], and [width] to auto-rename exported files." }
+            ].map((conv, idx) => (
+              <div key={idx} className="bg-white/[0.03] p-5 rounded-2xl border border-white/[0.07] hover:bg-white/[0.06] transition-all">
+                <h4 className="text-teal-400 font-bold text-xs uppercase mb-2 tracking-wide">{conv.title}</h4>
+                <p className="text-[11px] text-slate-400 leading-relaxed">{conv.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
 
         <div className="pt-12 border-t border-white/10 relative z-10">
-          <h2 className="text-xl font-bold mb-6 text-center text-slate-200">Frequently Asked Questions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <h2 className="text-2xl font-black mb-8 text-center text-slate-200 tracking-tight">Frequently Asked Questions (FAQs)</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="space-y-2">
-              <h4 className="text-sm font-black text-teal-400 uppercase tracking-tighter">How to resize photo for SSO Rajasthan?</h4>
-              <p className="text-xs text-slate-500 leading-relaxed">Upload your photo, select 'Pixels' mode, enter 350w x 450h, and use the 'Passport' crop preset. Click start batch and download.</p>
+              <h4 className="text-sm font-black text-teal-400 uppercase tracking-tighter">How to convert HEIC to JPG?</h4>
+              <p className="text-xs text-slate-400 leading-relaxed">Simply upload your iPhone HEIC/HEIF files into the upload area. Our local conversion engine will instantly decode them into high-quality JPEGs in real-time, allowing you to crop, resize, or compress them before saving.</p>
             </div>
             <div className="space-y-2">
-              <h4 className="text-sm font-black text-teal-400 uppercase tracking-tighter">What is the best format for websites?</h4>
-              <p className="text-xs text-slate-500 leading-relaxed">WebP is highly recommended. Use our quality slider at 80% to balance visual fidelity and lightning-fast loading speeds.</p>
+              <h4 className="text-sm font-black text-teal-400 uppercase tracking-tighter">How do I crop images to official passport size?</h4>
+              <p className="text-xs text-slate-400 leading-relaxed">After adding your photo, click the 'Crop & Edit' (pencil) icon on its preview. Choose the 'Passport (3.5x4.5cm)' or 'US Visa (2x2\")' preset in the sidebar. Adjust the crop selection box and click 'Apply Crop'. The aspect ratio remains perfectly locked to official guidelines.</p>
             </div>
             <div className="space-y-2">
-              <h4 className="text-sm font-black text-teal-400 uppercase tracking-tighter">Is bulk image conversion safe?</h4>
-              <p className="text-xs text-slate-500 leading-relaxed">Yes, on Toolina it is. We use Client-Side processing (JS) so your images stay on your device throughout the entire process.</p>
+              <h4 className="text-sm font-black text-teal-400 uppercase tracking-tighter">Can I compress images to under 20KB or 50KB?</h4>
+              <p className="text-xs text-slate-400 leading-relaxed">Yes! Upload your files, set your export format to JPEG or WebP, and utilize the Compression Quality slider. Setting the quality slider around 50% - 70% and lowering the dimensions to standard web resolutions will instantly bring the file size in KB down to meet strict portal restrictions.</p>
+            </div>
+            <div className="space-y-2">
+              <h4 className="text-sm font-black text-teal-400 uppercase tracking-tighter">Are my private photos and documents secure?</h4>
+              <p className="text-xs text-slate-400 leading-relaxed">Yes, absolutely. Unlike conventional converters that send your personal files to cloud servers, Toolina operates entirely client-side. Your photos, government documents, and signatures are processed in-browser, meaning they never leave your machine.</p>
+            </div>
+            <div className="space-y-2">
+              <h4 className="text-sm font-black text-teal-400 uppercase tracking-tighter">Does this batch resizer work offline?</h4>
+              <p className="text-xs text-slate-400 leading-relaxed">Yes! Once you load the Toolina Image Converter in your browser, the entire file processing, cropping, and conversion engine can function fully offline without any internet connection.</p>
+            </div>
+            <div className="space-y-2">
+              <h4 className="text-sm font-black text-teal-400 uppercase tracking-tighter">What are the supported output file types?</h4>
+              <p className="text-xs text-slate-400 leading-relaxed">We support exporting to high-quality PNG, highly-compressed JPEG (JPG), next-gen WebP, standard GIF, and lossless BMP formats, covering all requirements for development, social media, and official registration submissions.</p>
             </div>
           </div>
         </div>
       </footer>
     
-      
-      
       <AccompanyingText 
-        toolName="Image Converter"
-        howItWorks="This tool uses advanced client-side processing to deliver instant results without sending your data to any external server. Simply input your parameters, and the algorithmic engine processes the data locally in your browser ensuring maximum privacy and speed."
-        whyItsUseful="Whether you are a professional or a casual user, this tool saves you significant time by automating complex calculations and data transformations. It eliminates manual errors and provides a structured, easy-to-read output that you can rely on for your daily tasks."
+        toolName="Image Converter & Multi-Format Resizer"
+        howItWorks="Our bulk converter leverages high-speed HTML5 Canvas rendering and local browser buffers to manipulate image blobs directly. You can drag and drop your files, set pixel or percentage scaling, lock aspect ratios, and fine-tune compression quality sliders. Once configured, our batch processor loops over the queue, generating customized files with your selected format and custom naming rules in seconds, allowing immediate single downloads or packing everything cleanly into a ZIP file. It also supports dynamic browser decoding of iOS/macOS HEIC/HEIF files to eliminate conversion bottlenecks."
+        whyItsUseful="Whether you are optimizing photographic assets for Web Speed Index / PageSpeed, resizing documents to strict KB specifications for government recruitment portals (like SSO Rajasthan, SSC, UPSC, or banking boards), or converting bulk file formats (like heavy raw BMPs into highly compatible JPEGs or Apple HEIC to standard PNGs), this tool eliminates manual single-file processing. It runs entirely locally on your hardware, eliminating privacy vulnerabilities and file size bottlenecks."
         faqs={[
-          { q: "Is my data secure?", a: "Yes, 100% secure. All processing happens entirely within your browser. We do not store or transmit your inputs to any remote servers." },
-          { q: "Is this tool free to use?", a: "Absolutely. Toolina provides this utility completely free of charge with no hidden limits or premium paywalls." },
-          { q: "Can I use this on mobile?", a: "Yes, the interface is fully responsive and works seamlessly across desktops, tablets, and smartphones." }
+          { q: "What file types can I upload and convert?", a: "You can upload JPEG, JPG, PNG, WEBP, GIF, BMP, SVG, and modern Apple HEIC/HEIF image types. You can instantly export them to PNG, JPG, WebP, GIF, or BMP formats with specialized quality and sizing controls." },
+          { q: "Can I convert HEIC to JPG in bulk on Toolina?", a: "Yes, you can! Drop multiple HEIC files from your iPhone into the converter, and they will be decoded into JPEGs locally in your browser. From there, you can process them together in a single batch." },
+          { q: "How does the compression quality slider work?", a: "For JPEG and WebP exports, the slider controls the compression algorithm's fidelity (from 10% to 100%). Dragging it down reduces file sizes exponentially, making it easy to create images under 20KB, 50KB, or 100KB without drastic visual degradation." },
+          { q: "Do my images get uploaded to Toolina's servers?", a: "No, never. Toolina's batch image converter operates 100% locally in your browser. No files are uploaded to any servers, guaranteeing absolute confidentiality for sensitive identity proofs, documents, and signatures." },
+          { q: "Can I crop and rotate photos before batch converting?", a: "Yes, you can rotate any image by 90-degree intervals and use the crop modal with custom aspect-ratio overlays (including official Passport dimensions) before starting the batch operation." }
         ]}
       />
   

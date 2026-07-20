@@ -93,6 +93,8 @@ const RajasthanSaleDeed: React.FC = () => {
       <SEO 
         title="Rajasthan Sale Deed Stamp Duty Calculator 2026 | Property Registry" 
         description="Calculate exact Rajasthan sale deed stamp duty rates, property registration fees, cow cess, and infrastructure surcharge for Male, Female, SC/ST, and Joint ownerships for 2026." 
+        url="https://toolina.in/rajasthan-property-sale-deed-calculator"
+        keywords="rajasthan property registry charges hindi, sale deed stamp duty in rajasthan, rajasthan dlc rate calculator, registry me kitna kharch aata hai, rajasthan me registry fee kitni hai, flat ki registry ka kharch, property registry rules rajasthan, stamp duty calculator rajasthan hindi, jaipur dlc rate registry charges, jodhpur property registry tax, zameen ki registry rajasthan in hindi, registry charges kaise nikale, sale deed registry rules rajasthan, plot registry kharch rajasthan, flat registry charges rajasthan"
         structuredData={{
           "@context": "https://schema.org",
           "@type": "SoftwareApplication",
@@ -230,6 +232,61 @@ const RajasthanSaleDeed: React.FC = () => {
           </section>
         </div>
       </header>
+
+      {/* Hinglish Guide for high-intent SEO search queries */}
+      <section className="bg-white p-8 md:p-12 rounded-[2.5rem] border border-slate-200 space-y-8 shadow-xl shadow-slate-100/30">
+        <div className="text-center max-w-2xl mx-auto space-y-2">
+          <h3 className="text-2xl md:text-3xl font-display font-black text-slate-900 tracking-tight">
+            Hindi & Hinglish Guide: <span className="text-teal-600">Zameen Ya Flat Ki Registry Ka Kharch Kaise Nikalein?</span>
+          </h3>
+          <p className="text-xs text-slate-500 font-medium">Rajasthan property registration charges, stamp duty rate aur registry fees ki poori jaankari:</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+          <div className="space-y-4">
+            <h4 className="text-base font-black text-slate-800 flex items-center gap-2">
+              📜 Sale Deed (बैनामा / रजिस्ट्री) Kya Hota Hai?
+            </h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              <strong>Sale Deed (विक्रय पत्र)</strong> ek behad mahatvapurna legal document hota hai jo property (jaise plot, flat, makan ya dukan) ke ownership ko seller se buyer ke naam par transfer karta hai. Is deed ko stamp paper par banwaya jata hai aur sub-registrar office me register karwana kanoonan compulsory hota hai, tabhi aap property ke asli malik bante hain.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-base font-black text-slate-800 flex items-center gap-2">
+              📊 Rajasthan Me Registry Par Kitna Stamp Duty Tax Lagta Hai?
+            </h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Rajasthan me base stamp duty property ki market value ya DLC value par lagti hai. Purushon (Male) ke liye standard rate <strong>6%</strong> hai. Mahilaon (Female) ko protsahit karne ke liye sarkar <strong>5%</strong> (general women) aur SC/ST/BPL women ke liye <strong>4%</strong> stamp duty leti hai. Divyang (disabled) vyaktiyon aur transgender ko stamp duty me puri chhut (0%) milti hai.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-base font-black text-slate-800 flex items-center gap-2">
+              💵 Surcharge Aur Extra Fees Kya Hoti Hain?
+            </h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Base stamp duty ke alawa, Rajasthan me stamp duty ki raashi par extra <strong>30% ya 33% Surcharge</strong> lagta hai, jisme Cow Cess aur Infrastructure Surcharge shamil hota hai. Iske sath hi, property ki registry ke liye <strong>1% Registration Fee</strong> aur flat ₹500 CSI (Copying, Scanning, Indexing) charges bhi pay karne hote hain.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-base font-black text-slate-800 flex items-center gap-2">
+              📍 DLC Rate Aur Market Price Me Kya Antar Hai?
+            </h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              <strong>DLC (District Level Committee) Rate</strong> sarkar dwara tay kiye gaye minimum property rates hote hain, jisse kam par property ki registry nahi ki ja sakti. Agar aapne property dlc rate se saste me khareedi hai, tab bhi aapko registry dlc rate ke hisab se hi karwani hogi. Agar market price dlc rate se zyada hai, toh registry market price par hoti hai.
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-teal-50/50 border border-teal-100 p-6 rounded-3xl mt-6">
+          <h4 className="text-xs font-black uppercase text-teal-700 mb-2 tracking-wider">💡 Registry Karwate Waqt In Baaton Ka Dhyan Rakhein:</h4>
+          <p className="text-xs text-slate-600 leading-relaxed">
+            Registry ke liye dono parties (buyer aur seller) ke original Aadhaar Card, PAN Card, do gawah (witnesses) aur property ke purane chain documents zaruri hote hain. Aaj kal Rajasthan me online e-Panjiyan portal ke zariye stamp duty online pay karke sub-registrar ke yahan appointment book kiya ja sakta hai.
+          </p>
+        </div>
+      </section>
 
       {/* SEO Content Section */}
       <section className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm p-8 sm:p-12">

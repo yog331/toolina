@@ -1,9 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import SEO from '../components/SEO';
-import { TOOLS as INITIAL_TOOLS } from '../constants';
 import BrandLogo from '../components/BrandLogo';
-import { Tool } from '../types';
 
 const ADMIN_CREDENTIAL = import.meta.env.VITE_ADMIN_PASSWORD || "admin";
 
@@ -30,15 +27,15 @@ const AdminDashboard: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [password, setPassword] = useState('');
   const [error, setError] = useState(false);
-  const [activeTab, setActiveTab] = useState<'Stats' | 'Tools' | 'Feedback'>('Stats');
+  const [activeTab, setActiveTab] = useState<'Feedback' | 'DaRate' | 'Announcements'>('Feedback');
   const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
   
-  const [toolsState, setToolsState] = useState<Tool[]>([]);
   const [feedbackState, setFeedbackState] = useState<Feedback[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [liveStats, setLiveStats] = useState({ latency: 42, load: 12 });
   const [globalDaRate, setGlobalDaRate] = useState<number>(50);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isSavingDa, setIsSavingDa] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
     const sessionAuth = sessionStorage.getItem('yogi_admin_auth');
@@ -49,61 +46,54 @@ const AdminDashboard: React.FC = () => {
     
     // Load persisted state from API
     Promise.all([
-      fetch('/api/tools').then(res => res.json()).catch(() => []),
       fetch('/api/feedback').then(res => res.json()).catch(() => []),
       fetch('/api/announcements').then(res => res.json()).catch(() => []),
       fetch('/api/settings').then(res => res.json()).catch(() => ({}))
-    ]).then(([tools, feedback, announcements, settings]) => {
-      // Merge DB tools with INITIAL_TOOLS to ensure newly added tools show up
-      let mergedTools = [...INITIAL_TOOLS];
-      if (tools && tools.length > 0) {
-        mergedTools = mergedTools.map(initialTool => {
-          const dbTool = tools.find((t: Tool) => t.id === initialTool.id);
-          return dbTool ? { ...initialTool, ...dbTool, icon: initialTool.icon } : initialTool;
-        });
-        
-        // Add any DB tools that aren't in INITIAL_TOOLS
-        tools.forEach((dbTool: Tool) => {
-          if (!mergedTools.find(t => t.id === dbTool.id)) {
-            mergedTools.push(dbTool);
-          }
-        });
-      }
-
-      setToolsState(mergedTools);
+    ]).then(([feedback, announcements, settings]) => {
       setFeedbackState(Array.isArray(feedback) ? feedback : []);
       setAnnouncements(Array.isArray(announcements) ? announcements : []);
-      if (settings.da_rate) setGlobalDaRate(settings.da_rate);
+      if (settings && settings.da_rate !== undefined) setGlobalDaRate(settings.da_rate);
       setIsLoaded(true);
     });
 
     return () => clearInterval(timer);
   }, []);
 
-  // Save state changes
-  useEffect(() => { 
-    if (isLoaded) {
-      fetch('/api/tools', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(toolsState) }); 
+  // Sync state changes back to database when they are mutated
+  const saveFeedback = async (newFeedback: Feedback[]) => {
+    setFeedbackState(newFeedback);
+    await fetch('/api/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newFeedback)
+    });
+  };
+
+  const saveAnnouncements = async (newAnnouncements: Announcement[]) => {
+    setAnnouncements(newAnnouncements);
+    await fetch('/api/announcements', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newAnnouncements)
+    });
+  };
+
+  const handleSaveDaRate = async () => {
+    setIsSavingDa(true);
+    try {
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ da_rate: globalDaRate })
+      });
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (err) {
+      console.error("Failed to save DA rate", err);
+    } finally {
+      setIsSavingDa(false);
     }
-  }, [toolsState, isLoaded]);
-  
-  useEffect(() => { 
-    if (isLoaded) {
-      fetch('/api/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(feedbackState) }); 
-    }
-  }, [feedbackState, isLoaded]);
-  
-  useEffect(() => { 
-    if (isLoaded) {
-      fetch('/api/announcements', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(announcements) }); 
-    }
-  }, [announcements, isLoaded]);
-  
-  useEffect(() => { 
-    if (isLoaded) {
-      fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ da_rate: globalDaRate }) }); 
-    }
-  }, [globalDaRate, isLoaded]);
+  };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,46 +112,21 @@ const AdminDashboard: React.FC = () => {
     sessionStorage.removeItem('yogi_admin_auth');
   };
 
-  // Tools Management
-  const toggleNewBadge = (id: string) => {
-    setToolsState(prev => prev.map(tool => tool.id === id ? { ...tool, isNew: !tool.isNew } : tool));
-  };
-
-  const toggleOffline = (id: string) => {
-    setToolsState(prev => prev.map(tool => tool.id === id ? { ...tool, isOffline: !tool.isOffline } : tool));
-  };
-
-  const editToolMeta = (id: string) => {
-    const tool = toolsState.find(t => t.id === id);
-    if (!tool) return;
-    const newDesc = window.prompt(`Edit description for ${tool.name}:`, tool.description);
-    if (newDesc !== null) {
-      setToolsState(prev => prev.map(t => t.id === id ? { ...t, description: newDesc } : t));
-    }
-  };
-
-  const registerNewTool = () => {
-    const name = window.prompt("Enter new tool name:");
-    if (!name) return;
-    const newTool: Tool = {
-      id: name.toLowerCase().replace(/\s+/g, '-'),
-      name,
-      description: "Newly registered tool description.",
-      icon: "🔧",
-      category: "Utility",
-      path: `/${name.toLowerCase().replace(/\s+/g, '-')}`,
-      isNew: true
-    };
-    setToolsState(prev => [...prev, newTool]);
-  };
-
   // Feedback Management
   const cycleFeedbackStatus = (id: string) => {
-    setFeedbackState(prev => prev.map(f => {
+    const updated = feedbackState.map(f => {
       if (f.id !== id) return f;
       const nextStatus = f.status === 'New' ? 'Assigned' : f.status === 'Assigned' ? 'Resolved' : 'New';
       return { ...f, status: nextStatus };
-    }));
+    });
+    saveFeedback(updated);
+  };
+
+  const deleteFeedbackItem = (id: string) => {
+    if (window.confirm("Are you sure you want to delete this feedback?")) {
+      const updated = feedbackState.filter(f => f.id !== id);
+      saveFeedback(updated);
+    }
   };
 
   const loadArchiveQueries = () => {
@@ -175,16 +140,17 @@ const AdminDashboard: React.FC = () => {
       date: "2 months ago",
       status: "Resolved"
     };
-    setFeedbackState(prev => [...prev, archive]);
+    saveFeedback([...feedbackState, archive]);
   };
 
   const clearFeedback = () => {
     if (window.confirm("Clear all resolved feedback?")) {
-      setFeedbackState(prev => prev.filter(f => f.status !== 'Resolved'));
+      const updated = feedbackState.filter(f => f.status !== 'Resolved');
+      saveFeedback(updated);
     }
   };
 
-  // Announcements
+  // Announcements Management
   const postAnnouncement = () => {
     const content = window.prompt("Enter announcement content:");
     if (!content) return;
@@ -192,44 +158,30 @@ const AdminDashboard: React.FC = () => {
       id: Date.now().toString(),
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
       content,
-      color: "text-emerald-400",
+      color: "text-teal-400",
       isActive: true
     };
-    setAnnouncements(prev => [newAnn, ...prev]);
+    saveAnnouncements([newAnn, ...announcements]);
   };
 
   const toggleAnnouncement = (id: string) => {
-    setAnnouncements(prev => prev.map(ann => 
-      ann.id === id ? { ...ann, isActive: ann.isActive === false ? true : false } : ann
-    ));
+    const updated = announcements.map(ann => 
+      ann.id === id ? { ...ann, isActive: !ann.isActive } : ann
+    );
+    saveAnnouncements(updated);
   };
 
-  // Stats Simulation
-  const refreshStats = () => {
-    setLiveStats({
-      latency: Math.floor(Math.random() * 30) + 20,
-      load: Math.floor(Math.random() * 40) + 10
-    });
+  const deleteAnnouncement = (id: string) => {
+    if (window.confirm("Are you sure you want to delete this announcement?")) {
+      const updated = announcements.filter(ann => ann.id !== id);
+      saveAnnouncements(updated);
+    }
   };
-
-  const stats = [
-    { label: "Monthly Sessions", value: "14,282", growth: "+12.5%", color: "text-teal-600" },
-    { label: "Total Calculations", value: "894,302", growth: "+4.2%", color: "text-blue-600" },
-    { label: "Avg. Latency", value: `${liveStats.latency}ms`, growth: "-15.0%", color: "text-emerald-600" },
-    { label: "Conversion Rate", value: "24.8%", growth: "+0.8%", color: "text-orange-600" }
-  ];
-
-  const systemHealth = [
-    { name: "Gemini AI Engine", status: "Healthy", uptime: "99.98%", load: `${liveStats.load}%` },
-    { name: "Local Processing Node", status: "Active", uptime: "100%", load: `${Math.max(2, liveStats.load - 10)}%` },
-    { name: "Global CDN (Fonts)", status: "Steady", uptime: "99.95%", load: "N/A" },
-    { name: "Storage Sync", status: "Healthy", uptime: "99.99%", load: "0.4%" }
-  ];
 
   if (!isAuthenticated) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center p-4">
-      <SEO title="Admin Control Panel | Toolina Internal" description="Free professional calculator and internal tool by Toolina. Accurate, fast, and easy to use." />
+        <SEO title="Admin Control Panel | Toolina Internal" description="Free professional calculator and internal tool by Toolina. Accurate, fast, and easy to use." />
         <div className="bg-white w-full max-w-md p-8 md:p-12 rounded-[3rem] border border-slate-200 shadow-2xl shadow-slate-200/50 animate-in zoom-in duration-500 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-full -mr-8 -mt-8"></div>
           
@@ -269,7 +221,7 @@ const AdminDashboard: React.FC = () => {
             </form>
             
             <div className="pt-6 border-t border-slate-100">
-               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Encrypted Session Layer • v4.2.1</p>
+               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Encrypted Session Layer • v5.0.0</p>
             </div>
           </div>
         </div>
@@ -279,6 +231,8 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <article className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-20 px-1">
+      <SEO title="Admin Control Panel | Toolina" description="Admin dashboard to manage Feedback, DA Rate, and Internal Announcements." />
+      
       {/* Admin Header */}
       <header className="bg-slate-900 p-8 md:p-12 rounded-[2.5rem] md:rounded-[3.5rem] border border-slate-800 shadow-2xl relative overflow-hidden group">
         <div className="absolute top-0 right-0 w-96 h-96 bg-teal-50 rounded-bl-[20rem] blur-3xl opacity-50 group-hover:opacity-70 transition-opacity"></div>
@@ -309,170 +263,24 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           <nav className="flex bg-slate-800/50 p-1.5 rounded-2xl border border-slate-700 w-full lg:w-auto">
-            {(['Stats', 'Tools', 'Feedback'] as const).map(tab => (
+            {[
+              { key: 'Feedback', label: 'Feedback' },
+              { key: 'DaRate', label: 'DA Rate Change' },
+              { key: 'Announcements', label: 'Announcements' }
+            ].map(tab => (
               <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key as any)}
                 className={`flex-1 lg:px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                  activeTab === tab ? 'bg-teal-500 text-slate-950 shadow-lg' : 'text-slate-400 hover:text-teal-400'
+                  activeTab === tab.key ? 'bg-teal-500 text-slate-950 shadow-lg' : 'text-slate-400 hover:text-teal-400'
                 }`}
               >
-                {tab}
+                {tab.label}
               </button>
             ))}
           </nav>
         </div>
       </header>
-
-      {/* Stats Tab */}
-      {activeTab === 'Stats' && (
-        <div className="space-y-8 animate-in fade-in duration-500">
-           <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-             {stats.map((s, i) => (
-               <div key={i} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all group">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">{s.label}</p>
-                  <div className={`text-4xl font-black tracking-tight mb-2 ${s.color}`}>{s.value}</div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-md">{s.growth}</span>
-                    <span className="text-[9px] font-medium text-slate-400 uppercase">vs last month</span>
-                  </div>
-               </div>
-             ))}
-           </section>
-
-           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              <section className="lg:col-span-8 bg-white rounded-[3rem] border border-slate-100 p-8 md:p-10 shadow-sm overflow-hidden">
-                <div className="flex items-center justify-between mb-8">
-                  <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">System Infrastructure Health</h3>
-                  <div className="flex items-center gap-4">
-                    <button onClick={refreshStats} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-teal-600 transition-colors">Refresh</button>
-                    <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
-                  </div>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead>
-                       <tr className="border-b border-slate-50">
-                         <th className="pb-4 text-[10px] font-black text-slate-400 uppercase">Resource</th>
-                         <th className="pb-4 text-[10px] font-black text-slate-400 uppercase">Status</th>
-                         <th className="pb-4 text-[10px] font-black text-slate-400 uppercase text-center">Uptime</th>
-                         <th className="pb-4 text-[10px] font-black text-slate-400 uppercase text-right">Load</th>
-                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                      {systemHealth.map((sys, i) => (
-                        <tr key={i} className="group hover:bg-slate-50 transition-colors">
-                          <td className="py-5 text-sm font-bold text-slate-700">{sys.name}</td>
-                          <td className="py-5">
-                            <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[9px] font-black uppercase">{sys.status}</span>
-                          </td>
-                          <td className="py-5 text-center text-sm font-mono text-slate-500">{sys.uptime}</td>
-                          <td className="py-5 text-right">
-                             <div className="flex flex-col items-end gap-1">
-                               <span className="text-[10px] font-black text-slate-800">{sys.load}</span>
-                               <div className="w-20 h-1 bg-slate-100 rounded-full overflow-hidden">
-                                  <div className="h-full bg-teal-500 transition-all duration-500" style={{ width: sys.load === 'N/A' ? '0%' : sys.load }}></div>
-                               </div>
-                             </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-
-              <aside className="lg:col-span-4 space-y-6">
-                <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden h-full flex flex-col justify-between">
-                   <div className="relative z-10">
-                     <h3 className="text-xs font-black uppercase tracking-[0.2em] text-teal-400 mb-6">Internal Announcements</h3>
-                     <div className="space-y-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                        {announcements.map((ann) => (
-                          <div key={ann.id} className={`p-4 border rounded-2xl transition-all ${ann.isActive === false ? 'bg-white/5 border-white/5 opacity-50' : 'bg-white/10 border-white/20'}`}>
-                             <div className="flex justify-between items-start mb-2">
-                               <p className={`text-[10px] font-black uppercase ${ann.color}`}>{ann.date}</p>
-                               <button 
-                                 onClick={() => toggleAnnouncement(ann.id)}
-                                 className={`text-[9px] font-black uppercase px-2 py-1 rounded ${ann.isActive === false ? 'bg-slate-800 text-slate-400' : 'bg-teal-500/20 text-teal-400'}`}
-                               >
-                                 {ann.isActive === false ? 'Inactive' : 'Active'}
-                               </button>
-                             </div>
-                             <p className="text-sm font-bold leading-relaxed">{ann.content}</p>
-                          </div>
-                        ))}
-                     </div>
-                   </div>
-                   <button onClick={postAnnouncement} className="mt-10 w-full py-4 bg-teal-500 text-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-teal-400 transition-all shadow-xl active:scale-95">
-                     Post Internal Update
-                   </button>
-                </div>
-              </aside>
-           </div>
-        </div>
-      )}
-
-      {/* Tools Management Tab */}
-      {activeTab === 'Tools' && (
-        <section className="bg-white rounded-[3rem] border border-slate-100 p-8 md:p-10 shadow-sm animate-in fade-in duration-500">
-           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-10">
-             <div>
-               <h3 className="text-2xl font-display font-black text-slate-900 tracking-tight">Active Library</h3>
-               <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Configure visibility & launch badges for all tools</p>
-             </div>
-             <div className="flex flex-wrap items-center gap-4">
-               <div className="bg-slate-50 border border-slate-200 px-4 py-2 rounded-xl flex items-center gap-3 shadow-sm">
-                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Global DA Rate</span>
-                 <input 
-                   type="number" 
-                   value={globalDaRate}
-                   onChange={(e) => setGlobalDaRate(Number(e.target.value))}
-                   className="w-16 bg-white border border-slate-200 rounded-lg px-2 py-1 text-sm font-bold text-teal-600 outline-none focus:border-teal-400 text-center"
-                 />
-                 <span className="text-[10px] font-black text-slate-400">%</span>
-               </div>
-               <button onClick={registerNewTool} className="bg-slate-900 text-white px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-teal-600 transition-all shadow-lg active:scale-95">
-                  Register New Tool
-               </button>
-             </div>
-           </div>
-
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-             {toolsState.map((tool) => (
-               <div key={tool.id} className={`bg-slate-50 border border-slate-200 p-6 rounded-[2rem] flex flex-col gap-4 group hover:bg-white hover:border-teal-200 transition-all ${tool.isOffline ? 'opacity-50 grayscale' : ''}`}>
-                  <div className="flex items-start justify-between">
-                    <div className="text-4xl grayscale group-hover:grayscale-0 transition-all">{tool.icon}</div>
-                    <div className="flex flex-col items-end gap-2">
-                       <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${tool.category === 'Govt' ? 'bg-indigo-100 text-indigo-600' : 'bg-teal-100 text-teal-600'}`}>
-                         {tool.category}
-                       </span>
-                       <button 
-                        onClick={() => toggleNewBadge(tool.id)}
-                        className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all border flex items-center gap-1 ${
-                          tool.isNew 
-                            ? 'bg-orange-500 text-white border-orange-600 shadow-sm' 
-                            : 'bg-white text-slate-400 border-slate-200'
-                        }`}
-                       >
-                         {tool.isNew ? '✨ NEW Badge ON' : 'Badge OFF'}
-                       </button>
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-black text-slate-900">{tool.name}</h4>
-                    <p className="text-[10px] text-slate-500 line-clamp-2 mt-1">{tool.description}</p>
-                  </div>
-                  <div className="flex gap-2 mt-2">
-                    <button onClick={() => editToolMeta(tool.id)} className="flex-1 py-2 text-[9px] font-black uppercase border border-slate-200 rounded-lg text-slate-400 hover:text-teal-600 hover:border-teal-200 transition-all">Edit Meta</button>
-                    <button onClick={() => toggleOffline(tool.id)} className={`flex-1 py-2 text-[9px] font-black uppercase rounded-lg transition-all ${tool.isOffline ? 'bg-emerald-500 text-white hover:bg-emerald-600' : 'bg-slate-900 text-white hover:bg-red-500'}`}>
-                      {tool.isOffline ? 'Go Online' : 'Offline'}
-                    </button>
-                  </div>
-               </div>
-             ))}
-           </div>
-        </section>
-      )}
 
       {/* Feedback Tab */}
       {activeTab === 'Feedback' && (
@@ -489,47 +297,47 @@ const AdminDashboard: React.FC = () => {
              {feedbackState.length === 0 ? (
                <div className="text-center py-12 text-slate-400 font-bold">No feedback queries found.</div>
              ) : feedbackState.map((f) => (
-               <div key={f.id} className="flex flex-col md:flex-row md:items-start justify-between p-6 bg-slate-50 border border-slate-100 rounded-[2rem] hover:bg-white hover:border-teal-200 hover:shadow-xl hover:shadow-teal-100/20 transition-all group">
-                  <div className="flex items-start gap-6 w-full">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xs shrink-0 ${f.status === 'New' ? 'bg-orange-100 text-orange-600' : 'bg-slate-200 text-slate-500'}`}>
-                      {f.user[0].toUpperCase()}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="text-sm font-black text-slate-900 group-hover:text-teal-600 transition-colors">{f.subject}</h4>
-                        {f.type && (
-                          <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${
-                            f.type === 'bug' ? 'bg-red-100 text-red-600' : f.type === 'feature' ? 'bg-blue-100 text-blue-600' : 'bg-slate-200 text-slate-600'
-                          }`}>
-                            {f.type}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-[10px] text-slate-400 font-medium mb-2">
-                        <span className="text-slate-700">{f.user}</span> 
-                        {f.email && <span className="mx-1">• <a href={`mailto:${f.email}`} className="hover:text-teal-600">{f.email}</a></span>} 
-                        <span className="opacity-60 mx-1">• {f.date}</span>
-                      </p>
-                      {f.message && (
-                        <div className="bg-white border border-slate-100 p-3 rounded-xl text-xs text-slate-600 font-medium leading-relaxed mt-2">
-                          {f.message}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4 mt-4 md:mt-0 shrink-0">
-                    <button 
-                      onClick={() => cycleFeedbackStatus(f.id)}
-                      className={`px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all hover:scale-105 ${
-                      f.status === 'New' ? 'bg-orange-50 border-orange-100 text-orange-600 hover:bg-orange-100' :
-                      f.status === 'Assigned' ? 'bg-blue-50 border-blue-100 text-blue-600 hover:bg-blue-100' :
-                      'bg-emerald-50 border-emerald-100 text-emerald-600 hover:bg-emerald-100'
-                    }`}>
-                      {f.status}
-                    </button>
-                    <button onClick={() => setFeedbackState(prev => prev.filter(item => item.id !== f.id))} className="p-3 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg></button>
-                  </div>
-               </div>
+                <div key={f.id} className="flex flex-col md:flex-row md:items-start justify-between p-6 bg-slate-50 border border-slate-100 rounded-[2rem] hover:bg-white hover:border-teal-200 hover:shadow-xl hover:shadow-teal-100/20 transition-all group">
+                   <div className="flex items-start gap-6 w-full">
+                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xs shrink-0 bg-teal-100 text-teal-700`}>
+                       {f.user ? f.user[0].toUpperCase() : 'U'}
+                     </div>
+                     <div className="flex-1">
+                       <div className="flex items-center gap-2 mb-1">
+                         <h4 className="text-sm font-black text-slate-900 group-hover:text-teal-600 transition-colors">{f.subject}</h4>
+                         {f.type && (
+                           <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${
+                             f.type === 'bug' ? 'bg-red-100 text-red-600' : f.type === 'feature' ? 'bg-blue-100 text-blue-600' : 'bg-slate-200 text-slate-600'
+                           }`}>
+                             {f.type}
+                           </span>
+                         )}
+                       </div>
+                       <p className="text-[10px] text-slate-400 font-medium mb-2">
+                         <span className="text-slate-700">{f.user}</span> 
+                         {f.email && <span className="mx-1">• <a href={`mailto:${f.email}`} className="hover:text-teal-600">{f.email}</a></span>} 
+                         <span className="opacity-60 mx-1">• {f.date}</span>
+                       </p>
+                       {f.message && (
+                         <div className="bg-white border border-slate-100 p-3 rounded-xl text-xs text-slate-600 font-medium leading-relaxed mt-2">
+                           {f.message}
+                         </div>
+                       )}
+                     </div>
+                   </div>
+                   <div className="flex items-center gap-4 mt-4 md:mt-0 shrink-0">
+                     <button 
+                       onClick={() => cycleFeedbackStatus(f.id)}
+                       className={`px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all hover:scale-105 ${
+                       f.status === 'New' ? 'bg-orange-50 border-orange-100 text-orange-600 hover:bg-orange-100' :
+                       f.status === 'Assigned' ? 'bg-blue-50 border-blue-100 text-blue-600 hover:bg-blue-100' :
+                       'bg-emerald-50 border-emerald-100 text-emerald-600 hover:bg-emerald-100'
+                     }`}>
+                       {f.status}
+                     </button>
+                     <button onClick={() => deleteFeedbackItem(f.id)} className="p-3 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg></button>
+                   </div>
+                </div>
              ))}
            </div>
            
@@ -539,11 +347,140 @@ const AdminDashboard: React.FC = () => {
         </section>
       )}
 
+      {/* DA Rate Change Tab */}
+      {activeTab === 'DaRate' && (
+        <section className="bg-white rounded-[3rem] border border-slate-100 p-8 md:p-12 shadow-sm animate-in fade-in duration-500 max-w-2xl mx-auto">
+          <div className="text-center space-y-4 mb-8">
+            <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center text-3xl mx-auto">
+              📊
+            </div>
+            <div>
+              <h3 className="text-2xl font-display font-black text-slate-900 tracking-tight">Dearness Allowance (DA) Rate Change</h3>
+              <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Configure the global dearness allowance rate</p>
+            </div>
+          </div>
+
+          <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-200/60 space-y-6">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black text-slate-500 uppercase tracking-widest">Global DA Rate</span>
+              <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-slate-200">
+                <input 
+                  type="number" 
+                  value={globalDaRate}
+                  onChange={(e) => setGlobalDaRate(Number(e.target.value))}
+                  className="w-20 bg-transparent text-xl font-black text-teal-600 text-center outline-none"
+                />
+                <span className="text-sm font-black text-slate-400">%</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <input 
+                type="range" 
+                min="0" 
+                max="100" 
+                value={globalDaRate}
+                onChange={(e) => setGlobalDaRate(Number(e.target.value))}
+                className="w-full accent-teal-500 h-2 bg-slate-200 rounded-lg cursor-pointer"
+              />
+              <div className="flex justify-between text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                <span>0%</span>
+                <span>25%</span>
+                <span>50%</span>
+                <span>75%</span>
+                <span>100%</span>
+              </div>
+            </div>
+
+            <button 
+              onClick={handleSaveDaRate}
+              disabled={isSavingDa}
+              className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] hover:bg-teal-600 hover:text-white transition-all shadow-xl active:scale-95 disabled:opacity-50"
+            >
+              {isSavingDa ? 'Saving Settings...' : 'Save Global DA Rate'}
+            </button>
+
+            {saveSuccess && (
+              <div className="text-center text-emerald-600 text-xs font-bold uppercase tracking-widest animate-pulse">
+                Successfully Updated and Saved!
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Announcements Tab */}
+      {activeTab === 'Announcements' && (
+        <section className="bg-white rounded-[3rem] border border-slate-100 p-8 md:p-10 shadow-sm animate-in fade-in duration-500">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-10">
+            <div>
+              <h3 className="text-2xl font-display font-black text-slate-900 tracking-tight">Internal Announcements</h3>
+              <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Post and manage bulletin updates for employees and visitors</p>
+            </div>
+            <button 
+              onClick={postAnnouncement}
+              className="bg-slate-900 text-white px-8 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-teal-600 transition-all shadow-lg active:scale-95"
+            >
+              Create New Announcement
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {announcements.length === 0 ? (
+              <div className="col-span-full text-center py-12 text-slate-400 font-bold">
+                No announcements posted yet. Click the button to create one!
+              </div>
+            ) : announcements.map((ann) => (
+              <div 
+                key={ann.id} 
+                className={`p-6 border rounded-[2rem] flex flex-col justify-between gap-4 transition-all ${
+                  ann.isActive === false 
+                    ? 'bg-slate-100/50 border-slate-200/50 opacity-60' 
+                    : 'bg-slate-50 border-slate-200'
+                }`}
+              >
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-teal-600 bg-teal-50 px-3 py-1 rounded-lg">
+                      {ann.date}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => toggleAnnouncement(ann.id)}
+                        className={`text-[9px] font-black uppercase px-3 py-1 rounded-lg transition-all ${
+                          ann.isActive === false 
+                            ? 'bg-slate-200 text-slate-500' 
+                            : 'bg-emerald-100 text-emerald-700'
+                        }`}
+                      >
+                        {ann.isActive === false ? 'Inactive' : 'Active'}
+                      </button>
+                      <button 
+                        onClick={() => deleteAnnouncement(ann.id)}
+                        className="p-1.5 text-slate-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-all"
+                        title="Delete Announcement"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-sm font-bold text-slate-800 leading-relaxed">
+                    {ann.content}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Footer Branding for Admin */}
       <footer className="text-center pt-12">
         <div className="inline-flex items-center gap-2 grayscale opacity-30 brightness-50">
            <BrandLogo className="w-6 h-6" />
-           <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.4em]">Internal System Environment • Toolina 2025</p>
+           <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.4em]">Internal System Environment • Toolina 2026</p>
         </div>
       </footer>
     </article>

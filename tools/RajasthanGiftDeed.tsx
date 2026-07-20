@@ -87,6 +87,8 @@ const RajasthanGiftDeed: React.FC = () => {
       <SEO 
         title="Rajasthan Gift Deed Stamp Duty Calculator 2026" 
         description="Calculate Rajasthan Gift Deed stamp duty and registration fees for family and non-family members based on the official 2026 schedule." 
+        url="https://toolina.in/rajasthan-property-gift-deed-calculator"
+        keywords="gift deed stamp duty in rajasthan, rajasthan gift deed calculator, gift deed charges in rajasthan in hindi, father to son gift deed stamp duty in rajasthan, gift deed registry fees rajasthan, property gift deed rules in hindi, rajasthan me gift deed kaise banaye, gift deed format rajasthan, family gift deed stamp duty rajasthan, stamp duty on gift deed rajasthan hindi, apni property gift kaise kare rajasthan, gift deed kharch rajasthan, bhai behen ko gift deed stamp duty, husband wife gift deed stamp duty rajasthan"
         structuredData={{
           "@context": "https://schema.org",
           "@type": "SoftwareApplication",
@@ -218,6 +220,61 @@ const RajasthanGiftDeed: React.FC = () => {
           </section>
         </div>
       </header>
+
+      {/* Hinglish Guide for high-intent SEO search queries */}
+      <section className="bg-white p-8 md:p-12 rounded-[2.5rem] border border-slate-200 space-y-8 shadow-xl shadow-slate-100/30">
+        <div className="text-center max-w-2xl mx-auto space-y-2">
+          <h3 className="text-2xl md:text-3xl font-display font-black text-slate-900 tracking-tight">
+            Hindi & Hinglish Guide: <span className="text-purple-600">Rajasthan Me Gift Deed Ke Rules Aur Stamp Duty</span>
+          </h3>
+          <p className="text-xs text-slate-500 font-medium">Property gift deed charges, stamp duty exemptions aur registry fees ki complete details:</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+          <div className="space-y-4">
+            <h4 className="text-base font-black text-slate-800 flex items-center gap-2">
+              🎁 Gift Deed (दान पत्र) Kya Hota Hai?
+            </h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              <strong>Gift Deed (दान पत्र)</strong> ek legal document hai jiske zariye aap apni property bina kisi paise ke lena-dena kiye, kisi dusre vyakti (donee) ke naam transfer karte hain. Will (वसीयत) ke mukable iska sabse bada fayda ye hai ki property ka ownership turant transfer ho jata hai, aur donor ki mrityu ka wait nahi karna padta.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-base font-black text-slate-800 flex items-center gap-2">
+              👨‍👩‍👧‍👦 Family Me Gift Deed Par Stamp Duty Kitni Hai?
+            </h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Rajasthan sarkar ne close blood relatives (jaise Wife, Son, Daughter, Parents, Brother, Sister, Daughter-in-law) ke liye stamp duty me bhari chhut di hai. Wife, Daughter, ya Son ko gift dene par <strong>0% (Exempted)</strong> stamp duty lagti hai. Bhai-behen, pati ya parents (age &lt;= 60) ke liye ye rate sirf <strong>2.5%</strong> hai.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-base font-black text-slate-800 flex items-center gap-2">
+              🧾 Registration Fees Aur Dusre Charges Kya Hain?
+            </h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Stamp duty me chhut milne ke baad bhi, property ki registry ke liye <strong>1% Registration Fee</strong> (property ki DLC value ka) aur extra CSI charges (flat ₹500) dena compulsory hota hai. Iske bina gift deed legally valid nahi mana jata aur sub-registrar office me register hona zaruri hai.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-base font-black text-slate-800 flex items-center gap-2">
+              ⚖️ Non-Family Member Ko Gift Dene Ke Niyam:
+            </h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Agar aap kisi friend ya distant relative (jaise chacha, mama, bhatija) ko property gift karte hain, toh general rules ke mutabik full <strong>6% Stamp Duty</strong> lagti hai. Iske sath hi stamp duty par 30% ya 33% ka Surcharge (Cow Cess + Infra Cess) bhi lagta hai. Isliye non-family gift kafi expensive hota hai.
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-purple-50/50 border border-purple-100 p-6 rounded-3xl mt-6">
+          <h4 className="text-xs font-black uppercase text-purple-700 mb-2 tracking-wider">💡 Important Tips for Rajasthan Gift Deed:</h4>
+          <p className="text-xs text-slate-600 leading-relaxed">
+            Gift Deed banwane ke liye property ke papers ke sath donor aur donee dono ka Aadhaar card, PAN card aur do gawah (witnesses) ki zarurat hoti hai. Gift register hone ke baad use revoke (vapas) nahi kiya ja sakta, isliye dhyan se aur soch-samajh kar hi gift deed registry karwayein.
+          </p>
+        </div>
+      </section>
 
       {/* SEO Content Section */}
       <section className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm p-8 sm:p-12">

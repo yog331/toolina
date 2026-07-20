@@ -97,6 +97,8 @@ const RajasthanLeaseDeed: React.FC = () => {
       <SEO 
         title="Rajasthan Lease Deed & Rent Agreement Calculator 2026" 
         description="Calculate exact stamp duty and registration fees for Lease Deeds and Rent Agreements in Rajasthan for 2026. Supports short-term, long-term (>30 years), and Govt leases." 
+        url="https://toolina.in/rajasthan-lease-deed-stamp-duty-calculator"
+        keywords="rajasthan rent agreement stamp duty, lease deed charges in rajasthan, rent agreement kaise banta hai rajasthan, rent agreement format hindi rajasthan, stamp duty on rent agreement rajasthan, rajasthan lease deed calculator, 11 month rent agreement stamp duty rajasthan, commercial rent agreement charges rajasthan, shop lease agreement stamp duty, lease deed registry fees rajasthan, rent agreement online rajasthan, registry charges lease deed rajasthan, lease deed format in hindi, kirayanama stamp duty rajasthan"
         structuredData={{
           "@context": "https://schema.org",
           "@type": "SoftwareApplication",
@@ -231,6 +233,61 @@ const RajasthanLeaseDeed: React.FC = () => {
           </section>
         </div>
       </header>
+
+      {/* Hinglish Guide for high-intent SEO search queries */}
+      <section className="bg-white p-8 md:p-12 rounded-[2.5rem] border border-slate-200 space-y-8 shadow-xl shadow-slate-100/30">
+        <div className="text-center max-w-2xl mx-auto space-y-2">
+          <h3 className="text-2xl md:text-3xl font-display font-black text-slate-900 tracking-tight">
+            Hindi & Hinglish Guide: <span className="text-indigo-600">Rent Agreement Aur Lease Deed Kaise Banwayein?</span>
+          </h3>
+          <p className="text-xs text-slate-500 font-medium">Rent agreement stamp duty, lease deed rules aur commercial property registry charges ki complete details:</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+          <div className="space-y-4">
+            <h4 className="text-base font-black text-slate-800 flex items-center gap-2">
+              📜 Rent Agreement Aur Lease Deed Me Kya Antar Hai?
+            </h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Aamtaur par residential ya short-term tenancies ke liye 11 mahine ka <strong>Rent Agreement (किरायानामा)</strong> banwaya jata hai jo ki ek simple agreement hota hai. Wahi dusri taraf, long-term (jaise 5 saal, 10 saal ya usse zyada) ya fir commercial properties ke liye <strong>Lease Deed (पट्टा)</strong> register karwana compulsory hota hai.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-base font-black text-slate-800 flex items-center gap-2">
+              🧾 11 Mahine Ka Rent Agreement Kyun Banaya Jata Hai?
+            </h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Indian Registration Act ke mutabik, agar lease period 12 mahine (1 saal) ya usse zyada hai, toh deed ko register karwana kanoonan compulsory hai. Is compulsory registration aur stamp duty se bachne ke liye, log aamtaur par sirf <strong>11 mahine</strong> ka agreement banwate hain jise stamp paper par notarize karwaya jata hai.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-base font-black text-slate-800 flex items-center gap-2">
+              📊 Rajasthan Me Lease Deed Par Stamp Duty Aur Registry Fee:
+            </h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Rajasthan me lease deed par stamp duty tenure (avadhi) par depend karti hai. Standard leases (30 saal tak) ke liye base stamp duty par sarkar ki taraf se <strong>20% Rebate (chhut)</strong> milti hai. Iske sath stamp duty par 30% se 33% tak ka surcharge (Cow Surcharge + Infra Surcharge) aur 1% Registration fee lagti hai.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-base font-black text-slate-800 flex items-center gap-2">
+              🏢 Commercial Rent Agreement Ke Rules Aur Charges:
+            </h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Dukan, office, warehouse ya factory jaise commercial space ko rent par dete waqt legal disputes se bachne ke liye formal Lease Deed registry behad zaruri hai. Is calculator me aap asani se apna total rent, security deposit aur advance premium dalkar exact stamp duty aur official fees count kar sakte hain.
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-indigo-50/50 border border-indigo-100 p-6 rounded-3xl mt-6">
+          <h4 className="text-xs font-black uppercase text-indigo-700 mb-2 tracking-wider">💡 Documents Needed for Rent/Lease Registration:</h4>
+          <p className="text-xs text-slate-600 leading-relaxed">
+            Rent agreement ya lease deed register karwane ke liye Landlord (makan malik) aur Tenant (kirayedar) dono ke Aadhaar card, PAN card, do passport size photos aur do gawah (witnesses) ki zarurat hoti hai. Registry humesha sub-registrar office me appointment lekar dono pakshon ki maujoodgi me hi hoti hai.
+          </p>
+        </div>
+      </section>
 
       {/* SEO Content Section */}
       <section className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm p-8 sm:p-12">

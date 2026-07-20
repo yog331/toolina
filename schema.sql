@@ -1,14 +1,3 @@
-CREATE TABLE IF NOT EXISTS tools (
-    id TEXT PRIMARY KEY,
-    name TEXT,
-    description TEXT,
-    icon TEXT,
-    category TEXT,
-    path TEXT,
-    isNew BOOLEAN,
-    isOffline BOOLEAN
-);
-
 CREATE TABLE IF NOT EXISTS feedback (
     id TEXT PRIMARY KEY,
     user TEXT,

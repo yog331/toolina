@@ -290,5 +290,14 @@ export const TOOLS: Tool[] = [
     category: 'PDF Tools',
     path: '/unlock-pdf-remove-password',
     isNew: true
+  },
+  {
+    id: 'online-json-formatter',
+    name: 'JSON Formatter',
+    description: 'Validate, beautify, compact, escape, and query your JSON data with interactive tree views instantly.',
+    icon: '{ }',
+    category: 'Developer',
+    path: '/online-json-formatter-and-validator',
+    isNew: true
   }
 ];

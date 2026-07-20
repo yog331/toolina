@@ -11,9 +11,11 @@ interface SidebarProps {
   searchTerm: string;
   onSearchChange: (val: string) => void;
   tools: Tool[];
+  favorites: string[];
+  toggleFavorite: (id: string) => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle, onItemClick, searchTerm, onSearchChange, tools }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle, onItemClick, searchTerm, onSearchChange, tools, favorites = [], toggleFavorite }) => {
   const location = useLocation();
   const [activeCategory, setActiveCategory] = useState<ToolCategory | 'All'>('All');
   
@@ -94,6 +96,63 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle, onItemClick, searchTe
 
         {/* Navigation List */}
         <nav className="flex-1 px-3 py-4 space-y-6 overflow-y-auto scrollbar-hide">
+          {/* Pinned Tools Section at the top */}
+          {favorites.length > 0 && activeCategory === 'All' && !searchTerm && (
+            <div className="space-y-2">
+              <div className={`flex items-center gap-3 px-3 transition-opacity ${isOpen ? 'opacity-100' : 'opacity-0'}`}>
+                <h3 className="text-[10px] font-black text-rose-500 uppercase tracking-[0.2em] whitespace-nowrap">📌 Pinned Tools</h3>
+                <div className="h-px flex-1 bg-rose-100"></div>
+              </div>
+              <ul className="space-y-1">
+                {tools.filter(t => !t.isOffline && favorites.includes(t.id)).map(tool => (
+                  <li key={`pinned-side-${tool.id}`} className="relative group">
+                    <div className="flex items-center justify-between rounded-2xl transition-all min-h-[48px] hover:bg-slate-50 relative">
+                      <Link
+                        to={tool.path}
+                        onClick={onItemClick}
+                        className={`flex-1 flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all min-h-[48px]
+                          ${location.pathname === tool.path 
+                            ? 'bg-teal-50 text-teal-700 font-bold' 
+                            : 'text-slate-500'}`}
+                      >
+                        <span className="text-xl shrink-0 group-hover:scale-110 transition-transform">{tool.icon}</span>
+                        <span className={`whitespace-nowrap font-medium text-[13px] tracking-tight transition-all duration-300 ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 pointer-events-none'}`}>
+                          {tool.name}
+                        </span>
+                        {location.pathname === tool.path && !favorites.includes(tool.id) && (
+                          <div className="absolute right-12 w-1.5 h-1.5 bg-teal-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(20,184,166,0.6)]"></div>
+                        )}
+                      </Link>
+                      
+                      {isOpen && (
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            toggleFavorite(tool.id);
+                          }}
+                          className="p-3 mr-1 text-rose-500 hover:text-rose-600 transition-colors shrink-0 z-10"
+                          title="Unpin tool"
+                        >
+                          <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                          </svg>
+                        </button>
+                      )}
+
+                      {!isOpen && (
+                        <div className="absolute left-16 bg-slate-900 text-white text-[10px] font-bold px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all pointer-events-none whitespace-nowrap z-50 shadow-xl">
+                          {tool.name} ❤️
+                        </div>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Regular Categories */}
           {categories.map(cat => {
             if (activeCategory !== 'All' && activeCategory !== cat) return null;
             const catTools = filteredTools.filter(t => t.category === cat);
@@ -107,28 +166,51 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle, onItemClick, searchTe
                 </div>
                 <ul className="space-y-1">
                   {catTools.map(tool => (
-                    <li key={tool.id}>
-                      <Link
-                        to={tool.path}
-                        onClick={onItemClick}
-                        className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all group relative min-h-[48px]
-                          ${location.pathname === tool.path 
-                            ? 'bg-teal-50 text-teal-700 font-bold' 
-                            : 'text-slate-500 hover:bg-slate-50'}`}
-                      >
-                        <span className="text-xl shrink-0 group-hover:scale-110 transition-transform">{tool.icon}</span>
-                        <span className={`whitespace-nowrap font-medium text-[13px] tracking-tight transition-all duration-300 ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 pointer-events-none'}`}>
-                          {tool.name}
-                        </span>
-                        {location.pathname === tool.path && (
-                          <div className="absolute right-4 w-1.5 h-1.5 bg-teal-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(20,184,166,0.6)]"></div>
+                    <li key={tool.id} className="relative group">
+                      <div className="flex items-center justify-between rounded-2xl transition-all min-h-[48px] hover:bg-slate-50 relative">
+                        <Link
+                          to={tool.path}
+                          onClick={onItemClick}
+                          className={`flex-1 flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all min-h-[48px]
+                            ${location.pathname === tool.path 
+                              ? 'bg-teal-50 text-teal-700 font-bold' 
+                              : 'text-slate-500'}`}
+                        >
+                          <span className="text-xl shrink-0 group-hover:scale-110 transition-transform">{tool.icon}</span>
+                          <span className={`whitespace-nowrap font-medium text-[13px] tracking-tight transition-all duration-300 ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 pointer-events-none'}`}>
+                            {tool.name}
+                          </span>
+                          {location.pathname === tool.path && !favorites.includes(tool.id) && (
+                            <div className="absolute right-12 w-1.5 h-1.5 bg-teal-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(20,184,166,0.6)]"></div>
+                          )}
+                        </Link>
+                        
+                        {isOpen && (
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              toggleFavorite(tool.id);
+                            }}
+                            className={`p-3 mr-1 transition-colors shrink-0 z-10 ${
+                              favorites.includes(tool.id) 
+                                ? 'text-rose-500 hover:text-rose-600' 
+                                : 'text-slate-300 hover:text-rose-400 opacity-0 group-hover:opacity-100 focus:opacity-100'
+                            }`}
+                            title={favorites.includes(tool.id) ? "Remove PIN" : "PIN to top"}
+                          >
+                            <svg className={`w-4 h-4 ${favorites.includes(tool.id) ? 'fill-current' : 'stroke-current fill-none'}`} viewBox="0 0 24 24" strokeWidth="2.5">
+                              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                            </svg>
+                          </button>
                         )}
+
                         {!isOpen && (
                           <div className="absolute left-16 bg-slate-900 text-white text-[10px] font-bold px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all pointer-events-none whitespace-nowrap z-50 shadow-xl">
-                            {tool.name}
+                            {tool.name} {favorites.includes(tool.id) ? '❤️' : ''}
                           </div>
                         )}
-                      </Link>
+                      </div>
                     </li>
                   ))}
                 </ul>

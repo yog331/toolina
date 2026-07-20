@@ -36,6 +36,7 @@ const DevLysConverter = React.lazy(() => import('./tools/DevLysConverter'));
 const IncomeTaxCalculator = React.lazy(() => import('./tools/IncomeTaxCalculator'));
 const PdfSuite = React.lazy(() => import('./tools/PdfSuite'));
 const PlaceholderTool = React.lazy(() => import('./tools/PlaceholderTool'));
+const OnlineJsonFormatter = React.lazy(() => import('./tools/OnlineJsonFormatter'));
 
 // Legal, Support & Admin
 const PrivacyPolicy = React.lazy(() => import('./tools/PrivacyPolicy'));
@@ -52,6 +53,30 @@ const App: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 1024);
   const [searchTerm, setSearchTerm] = useState('');
   const [tools] = useState<Tool[]>(TOOLS);
+
+  // Favorites state persisted in localStorage
+  const [favorites, setFavorites] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem('tool_favorites');
+      return stored ? JSON.parse(stored) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  const toggleFavorite = (id: string) => {
+    setFavorites(prev => {
+      const updated = prev.includes(id) 
+        ? prev.filter(fId => fId !== id) 
+        : [...prev, id];
+      try {
+        localStorage.setItem('tool_favorites', JSON.stringify(updated));
+      } catch (e) {
+        console.error("Failed to save favorites to localStorage", e);
+      }
+      return updated;
+    });
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -89,6 +114,8 @@ const App: React.FC = () => {
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
           tools={tools}
+          favorites={favorites}
+          toggleFavorite={toggleFavorite}
         />
 
         <div className={`flex-1 flex flex-col transition-all duration-300 ease-in-out ${sidebarOpen ? 'lg:ml-72' : 'lg:ml-20'} w-full`}>
@@ -104,7 +131,7 @@ const App: React.FC = () => {
               <Breadcrumb />
               <React.Suspense fallback={<div className="flex items-center justify-center h-[50vh]"><div className="w-10 h-10 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div></div>}>
                 <Routes>
-                <Route path="/" element={<Dashboard searchTerm={searchTerm} tools={tools} />} />
+                <Route path="/" element={<Dashboard searchTerm={searchTerm} tools={tools} favorites={favorites} toggleFavorite={toggleFavorite} />} />
                 <Route path="/chronological-age-calculator" element={<AgeCalculator />} />
                 <Route path="/body-mass-index-bmi-calculator" element={<BMICalculator />} />
                 <Route path="/tdee-and-macronutrient-target-calculator" element={<TDEECalculator />} />
@@ -137,11 +164,13 @@ const App: React.FC = () => {
                 <Route path="/remove-pdf-pages-delete-securely" element={<PdfSuite defaultTool="remove-pdf-pages" />} />
                 <Route path="/add-watermark-to-pdf-online" element={<PdfSuite defaultTool="add-pdf-watermark" />} />
                 <Route path="/unlock-pdf-remove-password" element={<PdfSuite defaultTool="unlock-pdf" />} />
+                <Route path="/online-json-formatter-and-validator" element={<OnlineJsonFormatter />} />
 
                 {/* Permanent Redirects for Old Slugs to retain SEO Ranking */}
                 <Route path="/age-calc" element={<Navigate to="/chronological-age-calculator" replace />} />
                 <Route path="/bmi-calc" element={<Navigate to="/body-mass-index-bmi-calculator" replace />} />
                 <Route path="/csv-json" element={<Navigate to="/csv-to-json-converter" replace />} />
+                <Route path="/json-formatter" element={<Navigate to="/online-json-formatter-and-validator" replace />} />
                 <Route path="/qr-gen" element={<Navigate to="/qr-code-generator" replace />} />
                 <Route path="/word-counter" element={<Navigate to="/online-word-counter" replace />} />
                 <Route path="/raj-salary" element={<Navigate to="/rajasthan-government-salary-calculator" replace />} />

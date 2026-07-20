@@ -8,6 +8,8 @@ import BrandLogo from './BrandLogo';
 interface DashboardProps {
   searchTerm?: string;
   tools: Tool[];
+  favorites: string[];
+  toggleFavorite: (id: string) => void;
 }
 
 interface Announcement {
@@ -18,7 +20,7 @@ interface Announcement {
   isActive?: boolean;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ searchTerm = '', tools }) => {
+const Dashboard: React.FC<DashboardProps> = ({ searchTerm = '', tools, favorites = [], toggleFavorite }) => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
 
   useEffect(() => {
@@ -177,6 +179,72 @@ const Dashboard: React.FC<DashboardProps> = ({ searchTerm = '', tools }) => {
         
         {filteredTools.length > 0 ? (
           <div className="space-y-16">
+            {/* Pinned Tools Section */}
+            {favorites.length > 0 && activeCategory === 'All' && !searchTerm && (
+              <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <h3 className="text-2xl font-bold text-rose-600 flex items-center gap-2">
+                    <span>📌</span> Pinned Tools
+                  </h3>
+                  <div className="h-px bg-rose-100 flex-1"></div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                  {tools.filter(tool => !tool.isOffline && favorites.includes(tool.id)).map((tool) => (
+                    <Link 
+                      key={`pinned-dash-${tool.id}`} 
+                      to={tool.path}
+                      className="group bg-white p-6 rounded-[2rem] border-2 border-rose-100 hover:border-rose-300 hover:shadow-2xl hover:shadow-rose-100/30 transition-all duration-300 flex flex-col active:scale-[0.98] relative"
+                    >
+                      {tool.isNew && (
+                        <div className="absolute -top-2 -right-2 z-20">
+                          <span className="bg-gradient-to-tr from-orange-600 to-amber-400 text-white text-[9px] font-black px-2.5 py-1 rounded-lg shadow-lg shadow-orange-500/20 uppercase tracking-widest animate-pulse-soft border border-orange-500/20">
+                            New
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="flex items-start justify-between mb-6">
+                        <div className="text-4xl bg-rose-50/50 group-hover:bg-rose-50 p-4 rounded-2xl transition-all duration-500 shrink-0 group-hover:scale-110 rotate-0 group-hover:rotate-6">
+                          {tool.icon}
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          <span className="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full bg-slate-100 text-slate-500 group-hover:bg-teal-600 group-hover:text-white transition-all duration-300">
+                            {tool.category}
+                          </span>
+                          
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              toggleFavorite(tool.id);
+                            }}
+                            className="p-2 rounded-xl bg-rose-50 text-rose-500 hover:scale-110 transition-all duration-300"
+                            title="Unpin tool"
+                          >
+                            <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-rose-700 transition-colors">
+                        {tool.name}
+                      </h3>
+                      <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed flex-1">
+                        {tool.description}
+                      </p>
+                      <div className="mt-6 pt-6 border-t border-slate-50 flex items-center text-rose-600 font-bold text-xs group-hover:translate-x-1 transition-all">
+                        Launch Pinned Tool
+                        <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                        </svg>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {Array.from(new Set(filteredTools.map(t => t.category))).map(category => (
               <div key={category} className="space-y-6">
                 <div className="flex items-center gap-4">
@@ -203,9 +271,30 @@ const Dashboard: React.FC<DashboardProps> = ({ searchTerm = '', tools }) => {
                         <div className="text-4xl bg-slate-50 group-hover:bg-teal-50 p-4 rounded-2xl transition-all duration-500 shrink-0 group-hover:scale-110 rotate-0 group-hover:rotate-6">
                           {tool.icon}
                         </div>
-                        <span className="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full bg-slate-100 text-slate-500 group-hover:bg-teal-600 group-hover:text-white transition-all duration-300">
-                          {tool.category}
-                        </span>
+                        <div className="flex flex-col items-end gap-2">
+                          <span className="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full bg-slate-100 text-slate-500 group-hover:bg-teal-600 group-hover:text-white transition-all duration-300">
+                            {tool.category}
+                          </span>
+                          
+                          {/* Heart Button */}
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              toggleFavorite(tool.id);
+                            }}
+                            className={`p-2 rounded-xl transition-all duration-300 ${
+                              favorites.includes(tool.id)
+                                ? 'bg-rose-50 text-rose-500 hover:scale-110'
+                                : 'bg-slate-50 text-slate-300 hover:text-rose-400 hover:bg-rose-50 hover:scale-110'
+                            }`}
+                            title={favorites.includes(tool.id) ? "Remove PIN" : "PIN to top"}
+                          >
+                            <svg className={`w-4 h-4 ${favorites.includes(tool.id) ? 'fill-current' : 'stroke-current fill-none'}`} viewBox="0 0 24 24" strokeWidth="2.5">
+                              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                            </svg>
+                          </button>
+                        </div>
                       </div>
                       <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-teal-700 transition-colors">
                         {tool.name}

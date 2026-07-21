@@ -15,13 +15,16 @@ const mockCloudflareApi = () => ({
         const url = req.url.split('?')[0];
         res.setHeader('Content-Type', 'application/json');
         
-        let db: any = { tools: [], feedback: [], announcements: [], settings: { da_rate: 50 } };
+        let db: any = { tools: [], feedback: [], announcements: [], settings: { da_rate: 50 }, tool_ratings: {} };
         if (fs.existsSync(DB_FILE)) {
           try {
             db = JSON.parse(fs.readFileSync(DB_FILE, 'utf-8'));
           } catch (e) {
             console.error("Failed to read mock DB");
           }
+        }
+        if (!db.tool_ratings) {
+          db.tool_ratings = {};
         }
         const saveDb = () => fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
 
@@ -64,6 +67,29 @@ const mockCloudflareApi = () => ({
             db.settings.da_rate = parsedBody.da_rate; 
             saveDb(); 
             return res.end(JSON.stringify({success: true})); 
+          }
+        }
+        if (url === '/api/ratings') {
+          if (req.method === 'GET') {
+            const toolId = new URL(req.url, 'http://localhost').searchParams.get('toolId');
+            if (!toolId) return res.end(JSON.stringify({error: 'toolId is required'}));
+            const ratingEntry = db.tool_ratings[toolId] || { totalScore: 0, count: 0 };
+            const rating = ratingEntry.count > 0 ? Number((ratingEntry.totalScore / ratingEntry.count).toFixed(1)) : null;
+            return res.end(JSON.stringify({ rating, count: ratingEntry.count }));
+          }
+          if (req.method === 'POST' && parsedBody) {
+            const { toolId, ratingValue } = parsedBody;
+            if (!toolId || typeof ratingValue !== 'number' || ratingValue < 1 || ratingValue > 5) {
+              res.statusCode = 400;
+              return res.end(JSON.stringify({error: 'Invalid request'}));
+            }
+            const ratingEntry = db.tool_ratings[toolId] || { totalScore: 0, count: 0 };
+            ratingEntry.totalScore = (ratingEntry.totalScore || 0) + ratingValue;
+            ratingEntry.count = (ratingEntry.count || 0) + 1;
+            db.tool_ratings[toolId] = ratingEntry;
+            saveDb();
+            const rating = Number((ratingEntry.totalScore / ratingEntry.count).toFixed(1));
+            return res.end(JSON.stringify({ rating, count: ratingEntry.count }));
           }
         }
         

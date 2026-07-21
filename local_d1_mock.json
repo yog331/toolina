@@ -235,9 +235,48 @@
       "isNew": true
     }
   ],
-  "feedback": [],
+  "feedback": [
+    {
+      "id": "1784619906514",
+      "user": "Anonymous Tool User",
+      "email": "",
+      "subject": "Tool Rating: Rajasthan Govt Salary - 👍 Useful",
+      "message": "User rated the tool \"Rajasthan Govt Salary\" as USEFUL (👍) on path /rajasthan-government-salary-calculator.",
+      "type": "general",
+      "status": "new",
+      "date": "2026-07-21"
+    }
+  ],
   "announcements": [],
   "settings": {
     "da_rate": 60
+  },
+  "tool_ratings": {
+    "raj-salary": { "totalScore": 612.5, "count": 125 },
+    "central-salary": { "totalScore": 528.0, "count": 110 },
+    "devlys-unicode": { "totalScore": 484.8, "count": 101 },
+    "emi-calc": { "totalScore": 384.0, "count": 80 },
+    "nps-calc": { "totalScore": 423.0, "count": 90 },
+    "pay-matrix-central": { "totalScore": 336.0, "count": 70 },
+    "pay-matrix-raj": { "totalScore": 376.0, "count": 80 },
+    "income-tax-calc": { "totalScore": 588.0, "count": 120 },
+    "age-calc": { "totalScore": 432.0, "count": 90 },
+    "bmi-calc": { "totalScore": 276.0, "count": 60 },
+    "utility-bill": { "totalScore": 315.0, "count": 70 },
+    "qr-gen": { "totalScore": 460.0, "count": 95 },
+    "csv-json": { "totalScore": 240.0, "count": 50 },
+    "solar-calc": { "totalScore": 264.0, "count": 55 },
+    "img-conv": { "totalScore": 368.0, "count": 80 },
+    "raj-calendar": { "totalScore": 517.0, "count": 110 },
+    "raj-sale-deed": { "totalScore": 192.0, "count": 40 },
+    "raj-gift-deed": { "totalScore": 188.0, "count": 40 },
+    "raj-lease-deed": { "totalScore": 196.0, "count": 40 },
+    "pdf-to-image": { "totalScore": 282.0, "count": 60 },
+    "image-to-pdf": { "totalScore": 336.0, "count": 70 },
+    "merge-pdf": { "totalScore": 384.0, "count": 80 },
+    "split-pdf": { "totalScore": 235.0, "count": 50 },
+    "compress-pdf": { "totalScore": 282.0, "count": 60 },
+    "remove-pdf-pages": { "totalScore": 192.0, "count": 40 },
+    "add-pdf-watermark": { "totalScore": 184.0, "count": 40 }
   }
 }

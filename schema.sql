@@ -21,3 +21,9 @@ CREATE TABLE IF NOT EXISTS settings (
     key TEXT PRIMARY KEY,
     value TEXT
 );
+
+CREATE TABLE IF NOT EXISTS tool_ratings (
+    toolId TEXT PRIMARY KEY,
+    totalScore REAL,
+    count INTEGER
+);

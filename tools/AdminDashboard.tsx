@@ -60,15 +60,7 @@ const AdminDashboard: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Sync state changes back to database when they are mutated
-  const saveFeedback = async (newFeedback: Feedback[]) => {
-    setFeedbackState(newFeedback);
-    await fetch('/api/feedback', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newFeedback)
-    });
-  };
+  // Feedback synchronization helper is replaced with individual granular secure updates below.
 
   const saveAnnouncements = async (newAnnouncements: Announcement[]) => {
     setAnnouncements(newAnnouncements);
@@ -114,23 +106,56 @@ const AdminDashboard: React.FC = () => {
   };
 
   // Feedback Management
-  const cycleFeedbackStatus = (id: string) => {
-    const updated = feedbackState.map(f => {
-      if (f.id !== id) return f;
-      const nextStatus = f.status === 'New' ? 'Assigned' : f.status === 'Assigned' ? 'Resolved' : 'New';
-      return { ...f, status: nextStatus };
-    });
-    saveFeedback(updated);
-  };
+  const cycleFeedbackStatus = async (id: string) => {
+    const target = feedbackState.find(f => f.id === id);
+    if (!target) return;
+    const nextStatus = target.status === 'New' ? 'Assigned' : target.status === 'Assigned' ? 'Resolved' : 'New';
+    const updatedItem = { ...target, status: nextStatus };
 
-  const deleteFeedbackItem = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this feedback?")) {
-      const updated = feedbackState.filter(f => f.id !== id);
-      saveFeedback(updated);
+    // Optimistically update UI state
+    setFeedbackState(prev => prev.map(f => f.id === id ? updatedItem : f));
+
+    try {
+      const response = await fetch('/api/feedback', {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-Admin-Key': ADMIN_CREDENTIAL
+        },
+        body: JSON.stringify(updatedItem)
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update feedback status');
+      }
+    } catch (err) {
+      console.error(err);
+      // Rollback on failure
+      setFeedbackState(prev => prev.map(f => f.id === id ? target : f));
     }
   };
 
-  const loadArchiveQueries = () => {
+  const deleteFeedbackItem = async (id: string) => {
+    if (window.confirm("Are you sure you want to delete this feedback?")) {
+      const original = [...feedbackState];
+      setFeedbackState(prev => prev.filter(f => f.id !== id));
+      try {
+        const response = await fetch(`/api/feedback?id=${id}`, {
+          method: 'DELETE',
+          headers: {
+            'X-Admin-Key': ADMIN_CREDENTIAL
+          }
+        });
+        if (!response.ok) {
+          throw new Error('Failed to delete feedback');
+        }
+      } catch (err) {
+        console.error(err);
+        setFeedbackState(original);
+      }
+    }
+  };
+
+  const loadArchiveQueries = async () => {
     const archive: Feedback = {
       id: Date.now().toString(),
       user: "Archived User",
@@ -141,13 +166,43 @@ const AdminDashboard: React.FC = () => {
       date: "2 months ago",
       status: "Resolved"
     };
-    saveFeedback([...feedbackState, archive]);
+    try {
+      const response = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-Admin-Key': ADMIN_CREDENTIAL
+        },
+        body: JSON.stringify(archive)
+      });
+      if (response.ok) {
+        setFeedbackState(prev => [...prev, archive]);
+      } else {
+        throw new Error('Failed to load archive queries');
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const clearFeedback = () => {
+  const clearFeedback = async () => {
     if (window.confirm("Clear all resolved feedback?")) {
-      const updated = feedbackState.filter(f => f.status !== 'Resolved');
-      saveFeedback(updated);
+      const original = [...feedbackState];
+      setFeedbackState(prev => prev.filter(f => f.status !== 'Resolved'));
+      try {
+        const response = await fetch('/api/feedback?clear=resolved', {
+          method: 'DELETE',
+          headers: {
+            'X-Admin-Key': ADMIN_CREDENTIAL
+          }
+        });
+        if (!response.ok) {
+          throw new Error('Failed to clear resolved feedback');
+        }
+      } catch (err) {
+        console.error(err);
+        setFeedbackState(original);
+      }
     }
   };
 

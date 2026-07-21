@@ -59,9 +59,9 @@ function validateFeedback(f: any): string | null {
 export async function onRequestPost(context: any) {
   await initDb(context.env);
 
-  let payload: any;
+  let f: any;
   try {
-    payload = await context.request.json();
+    f = await context.request.json();
   } catch (err) {
     return new Response(JSON.stringify({ error: 'Invalid JSON payload.' }), {
       status: 400,
@@ -69,9 +69,12 @@ export async function onRequestPost(context: any) {
     });
   }
 
-  const isAdminUpdate = Array.isArray(payload);
+  // Identify admin request by verifying their admin key
+  const adminKey = context.request.headers.get('X-Admin-Key');
+  const expectedKey = context.env.VITE_ADMIN_PASSWORD || 'admin';
+  const isAdmin = adminKey === expectedKey;
 
-  if (!isAdminUpdate) {
+  if (!isAdmin) {
     // Verify Turnstile Token if secret key is present (or use test secret key)
     const turnstileToken = context.request.headers.get('X-Turnstile-Token');
     const secretKey = context.env.TURNSTILE_SECRET_KEY || '1x00000000000000000000000000000000AA';
@@ -108,49 +111,117 @@ export async function onRequestPost(context: any) {
     }
   }
 
-  if (isAdminUpdate) {
-    // Admin batch update (re-writes all feedbacks)
-    for (const f of payload) {
-      const err = validateFeedback(f);
-      if (err) {
-        return new Response(JSON.stringify({ error: `Validation failed: ${err}` }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        });
-      }
-    }
-    const stmts = [context.env.DB.prepare("DELETE FROM feedback")];
-    for (const f of payload) {
-      stmts.push(
-        context.env.DB.prepare("INSERT INTO feedback (id, user, email, subject, message, type, date, status, mobile) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
-          .bind(f.id, f.user.trim(), f.email.trim(), f.subject || f.type || 'General Inquiry', f.message.trim(), f.type || 'general', f.date, f.status, f.mobile ? f.mobile.trim() : '')
-      );
-    }
-    await context.env.DB.batch(stmts);
-  } else {
-    // Single contact form submission (No reading or leaking other user feedback!)
-    const f = payload;
-    const err = validateFeedback(f);
-    if (err) {
-      return new Response(JSON.stringify({ error: err }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-    await context.env.DB.prepare("INSERT INTO feedback (id, user, email, subject, message, type, date, status, mobile) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
-      .bind(
-        f.id || Date.now().toString(), 
-        f.user.trim(), 
-        f.email.trim(), 
-        f.subject || f.type || 'General Inquiry', 
-        f.message.trim(), 
-        f.type || 'general', 
-        f.date || new Date().toISOString().split('T')[0], 
-        f.status || 'New', 
-        f.mobile ? f.mobile.trim() : ''
-      )
-      .run();
+  // Single contact form submission (No reading or leaking other user feedback!)
+  const err = validateFeedback(f);
+  if (err) {
+    return new Response(JSON.stringify({ error: err }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
+
+  await context.env.DB.prepare("INSERT INTO feedback (id, user, email, subject, message, type, date, status, mobile) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+    .bind(
+      f.id || Date.now().toString(), 
+      f.user.trim(), 
+      f.email.trim(), 
+      f.subject || f.type || 'General Inquiry', 
+      f.message.trim(), 
+      f.type || 'general', 
+      f.date || new Date().toISOString().split('T')[0], 
+      f.status || 'New', 
+      f.mobile ? f.mobile.trim() : ''
+    )
+    .run();
   
+  return Response.json({ success: true });
+}
+
+export async function onRequestPut(context: any) {
+  await initDb(context.env);
+
+  const adminKey = context.request.headers.get('X-Admin-Key');
+  const expectedKey = context.env.VITE_ADMIN_PASSWORD || 'admin';
+  if (adminKey !== expectedKey) {
+    return new Response(JSON.stringify({ error: 'Unauthorized admin action.' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  let f: any;
+  try {
+    f = await context.request.json();
+  } catch (err) {
+    return new Response(JSON.stringify({ error: 'Invalid JSON payload.' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  if (!f || !f.id) {
+    return new Response(JSON.stringify({ error: 'Feedback ID is required.' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  const err = validateFeedback(f);
+  if (err) {
+    return new Response(JSON.stringify({ error: `Validation failed: ${err}` }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  await context.env.DB.prepare("UPDATE feedback SET status = ?, user = ?, email = ?, subject = ?, message = ?, type = ?, date = ?, mobile = ? WHERE id = ?")
+    .bind(
+      f.status || 'New',
+      f.user.trim(),
+      f.email.trim(),
+      f.subject || f.type || 'General Inquiry',
+      f.message.trim(),
+      f.type || 'general',
+      f.date,
+      f.mobile ? f.mobile.trim() : '',
+      f.id
+    )
+    .run();
+
+  return Response.json({ success: true });
+}
+
+export async function onRequestDelete(context: any) {
+  await initDb(context.env);
+
+  const adminKey = context.request.headers.get('X-Admin-Key');
+  const expectedKey = context.env.VITE_ADMIN_PASSWORD || 'admin';
+  if (adminKey !== expectedKey) {
+    return new Response(JSON.stringify({ error: 'Unauthorized admin action.' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  const url = new URL(context.request.url);
+  const id = url.searchParams.get('id');
+  const clear = url.searchParams.get('clear');
+
+  if (clear === 'resolved') {
+    await context.env.DB.prepare("DELETE FROM feedback WHERE status = 'Resolved'").run();
+    return Response.json({ success: true });
+  }
+
+  if (!id) {
+    return new Response(JSON.stringify({ error: 'Feedback ID is required.' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  await context.env.DB.prepare("DELETE FROM feedback WHERE id = ?")
+    .bind(id)
+    .run();
+
   return Response.json({ success: true });
 }

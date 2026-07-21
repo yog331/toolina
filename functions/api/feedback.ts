@@ -59,44 +59,56 @@ function validateFeedback(f: any): string | null {
 export async function onRequestPost(context: any) {
   await initDb(context.env);
 
-  // Verify Turnstile Token if secret key is present (or use test secret key)
-  const turnstileToken = context.request.headers.get('X-Turnstile-Token');
-  const secretKey = context.env.TURNSTILE_SECRET_KEY || '1x00000000000000000000000000000000AA';
-
-  if (turnstileToken) {
-    try {
-      const verifyUrl = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
-      const body = new URLSearchParams({
-        secret: secretKey,
-        response: turnstileToken,
-      });
-
-      const verifyResponse = await fetch(verifyUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: body.toString(),
-      });
-
-      const verifyResult = await verifyResponse.json() as { success: boolean; 'error-codes'?: string[] };
-      if (!verifyResult.success) {
-        return new Response(JSON.stringify({ error: 'Anti-bot verification failed. Please try again.' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        });
-      }
-    } catch (err) {
-      console.error('Turnstile verification request failed:', err);
-    }
-  } else if (context.env.TURNSTILE_SECRET_KEY && context.env.TURNSTILE_SECRET_KEY !== '1x00000000000000000000000000000000AA') {
-    return new Response(JSON.stringify({ error: 'Security verification token is missing.' }), {
+  let payload: any;
+  try {
+    payload = await context.request.json();
+  } catch (err) {
+    return new Response(JSON.stringify({ error: 'Invalid JSON payload.' }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' },
     });
   }
 
-  const payload = await context.request.json();
-  
-  if (Array.isArray(payload)) {
+  const isAdminUpdate = Array.isArray(payload);
+
+  if (!isAdminUpdate) {
+    // Verify Turnstile Token if secret key is present (or use test secret key)
+    const turnstileToken = context.request.headers.get('X-Turnstile-Token');
+    const secretKey = context.env.TURNSTILE_SECRET_KEY || '1x00000000000000000000000000000000AA';
+
+    if (turnstileToken) {
+      try {
+        const verifyUrl = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
+        const body = new URLSearchParams({
+          secret: secretKey,
+          response: turnstileToken,
+        });
+
+        const verifyResponse = await fetch(verifyUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: body.toString(),
+        });
+
+        const verifyResult = await verifyResponse.json() as { success: boolean; 'error-codes'?: string[] };
+        if (!verifyResult.success) {
+          return new Response(JSON.stringify({ error: 'Anti-bot verification failed. Please try again.' }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+      } catch (err) {
+        console.error('Turnstile verification request failed:', err);
+      }
+    } else if (context.env.TURNSTILE_SECRET_KEY && context.env.TURNSTILE_SECRET_KEY !== '1x00000000000000000000000000000000AA') {
+      return new Response(JSON.stringify({ error: 'Security verification token is missing.' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+  }
+
+  if (isAdminUpdate) {
     // Admin batch update (re-writes all feedbacks)
     for (const f of payload) {
       const err = validateFeedback(f);

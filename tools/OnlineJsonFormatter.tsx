@@ -429,17 +429,58 @@ const OnlineJsonFormatter: React.FC = () => {
   // Structured Data (JSON-LD) for SEO
   const structuredData = {
     "@context": "https://schema.org",
-    "@type": "WebApplication",
-    "name": "Yogi Online JSON Formatter",
-    "description": "Secure, fast online JSON Formatter, Validator, Beautifier, and Minifier. Format raw JSON, fix syntax errors, collapsible interactive tree views client-side.",
-    "applicationCategory": "DeveloperApplication",
-    "operatingSystem": "All",
-    "browserRequirements": "Requires JavaScript. Requires HTML5.",
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "USD"
-    }
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "name": "Yogi Online JSON Formatter",
+        "description": "Secure, fast online JSON Formatter, Validator, Beautifier, and Minifier. Format raw JSON, fix syntax errors, collapsible interactive tree views client-side.",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "All",
+        "browserRequirements": "Requires JavaScript. Requires HTML5.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How to format JSON online?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "To format JSON online, simply paste your raw, minified, or unformatted JSON text into the input field. The formatter instantly validates and beautifies your code, rendering an interactive collapsible tree view with clean colors and syntax highlighting."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How does the 'Auto-Fix' feature help correct JSON errors?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "The smart Auto-Fix button automatically scans and repairs common JSON mistakes like single quotes, missing property-key double quotes, and trailing commas to turn invalid raw code into valid standard JSON instantly."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Is my private JSON data secure on this website?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes, completely. Our online JSON formatter is 100% serverless and client-side. All processing, parsing, and formatting take place locally within your web browser, ensuring zero data transmission or storage on remote servers."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What are the key rules for valid JSON structure?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Standard JSON requires: 1) Double quotes around keys and string values. 2) No trailing commas at the end of objects or arrays. 3) Numbers without leading zeros. 4) Use of valid data types (Strings, Numbers, Objects, Arrays, Booleans, null)."
+            }
+          }
+        ]
+      }
+    ]
   };
 
   return (

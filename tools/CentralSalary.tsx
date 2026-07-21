@@ -9,7 +9,7 @@ const CentralSalary: React.FC = () => {
   const [ratingInfo, setRatingInfo] = useState<{rating: number, count: number}>({ rating: 4.6, count: 94 });
 
     const [basicPay, setBasicPay] = useState<number>(44900); // Default Level 7 starting
-  const [daPercent, setDaPercent] = useState<number>(50);
+  const [daPercent, setDaPercent] = useState<number>(60);
   const [hraCity, setHraCity] = useState<'X' | 'Y' | 'Z'>('Y');
   const [isTPTAHigher, setIsTPTAHigher] = useState<boolean>(false); // Cities like Delhi, Mumbai etc.
 

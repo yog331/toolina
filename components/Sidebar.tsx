@@ -67,8 +67,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle, onItemClick, searchTe
               placeholder="Search tools..."
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full pl-11 pr-4 py-3.5 bg-slate-100/50 border border-slate-200/60 rounded-2xl text-[13px] font-medium outline-none focus:ring-4 ring-teal-50 focus:border-teal-200 focus:bg-white transition-all shadow-sm"
+              className="w-full pl-11 pr-10 py-3.5 bg-slate-100/50 border border-slate-200/60 rounded-2xl text-[13px] font-medium outline-none focus:ring-4 ring-teal-50 focus:border-teal-200 focus:bg-white transition-all shadow-sm"
             />
+            {searchTerm && (
+              <button
+                onClick={() => onSearchChange('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 rounded-full transition-colors cursor-pointer"
+                title="Clear search"
+                aria-label="Clear search"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
           </div>
 
           <div className="flex flex-wrap gap-2 mb-2">

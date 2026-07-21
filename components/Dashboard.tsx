@@ -4,6 +4,13 @@ import SEO from './SEO';
 import { Link } from 'react-router-dom';
 import { Tool } from '../types';
 import BrandLogo from './BrandLogo';
+import {
+  DEPARTMENT_DATA,
+  PAY_MATRIX,
+  RGHS_SLABS,
+  SI_SLABS,
+  GPF_SLABS
+} from '../tools/constants';
 
 interface DashboardProps {
   searchTerm?: string;
@@ -42,11 +49,210 @@ const Dashboard: React.FC<DashboardProps> = ({ searchTerm = '', tools, favorites
   };
 
   const [activeCategory, setActiveCategory] = useState<string>('All');
+  const [viewMode, setViewMode] = useState<'grid' | 'compact' | 'list'>(() => {
+    try {
+      const saved = localStorage.getItem('toolina_dashboard_view_mode');
+      return (saved as 'grid' | 'compact' | 'list') || 'grid';
+    } catch {
+      return 'grid';
+    }
+  });
+
+  const handleViewModeChange = (mode: 'grid' | 'compact' | 'list') => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem('toolina_dashboard_view_mode', mode);
+    } catch {}
+  };
+
+  // ----------------------------------------------------
+  // Dynamic parsing of Rajasthan Salary search query
+  // ----------------------------------------------------
+  let isSalaryQuery = false;
+  let queryLevel = '';
+  let queryPay = 0;
+  let queryDept = '';
+  let queryPost = '';
+  let calculatedSalary: {
+    basic: number;
+    da: number;
+    hra: number;
+    cca: number;
+    gross: number;
+    deductions: number;
+    net: number;
+    rghs: number;
+    gpf: number;
+    si: number;
+  } | null = null;
+
+  if (searchTerm.trim()) {
+    const cleanQuery = searchTerm.toLowerCase();
+    
+    // Check level: e.g. L-10, l-12, level 10, etc.
+    const levelMatch = cleanQuery.match(/\b(?:level\s*|l-?|l\s*)(\d+)\b/i);
+    if (levelMatch) {
+      const lvlNum = parseInt(levelMatch[1]);
+      if (lvlNum >= 1 && lvlNum <= 24) {
+        queryLevel = `L-${lvlNum}`;
+        isSalaryQuery = true;
+      }
+    }
+
+    // Check basic pay: e.g. any 5-digit or 6-digit number between 10,000 and 250,000
+    const payMatch = cleanQuery.match(/\b(\d{5,6})\b/);
+    if (payMatch) {
+      const payVal = parseInt(payMatch[1]);
+      if (payVal >= 10000 && payVal <= 250000) {
+        queryPay = payVal;
+        isSalaryQuery = true;
+      }
+    }
+
+    // Try to match Department
+    for (const d of DEPARTMENT_DATA) {
+      if (cleanQuery.includes(d.name.toLowerCase())) {
+        queryDept = d.name;
+        isSalaryQuery = true;
+        break;
+      }
+    }
+
+    // Significant keywords for departments if no exact name matched
+    if (!queryDept) {
+      if (cleanQuery.includes('education') || cleanQuery.includes('shiksha') || cleanQuery.includes('teacher') || cleanQuery.includes('school')) {
+        const found = DEPARTMENT_DATA.find(d => d.name.toLowerCase().includes('education'));
+        if (found) {
+          queryDept = found.name;
+          isSalaryQuery = true;
+        }
+      } else if (cleanQuery.includes('police') || cleanQuery.includes('constable') || cleanQuery.includes('jail') || cleanQuery.includes('subordinate police')) {
+        const found = DEPARTMENT_DATA.find(d => d.name.toLowerCase().includes('police') || d.name.toLowerCase().includes('jail'));
+        if (found) {
+          queryDept = found.name;
+          isSalaryQuery = true;
+        }
+      } else if (cleanQuery.includes('account') || cleanQuery.includes('audit')) {
+        const found = DEPARTMENT_DATA.find(d => d.name.toLowerCase().includes('accounts'));
+        if (found) {
+          queryDept = found.name;
+          isSalaryQuery = true;
+        }
+      } else if (cleanQuery.includes('medical') || cleanQuery.includes('health') || cleanQuery.includes('nurse') || cleanQuery.includes('hospital')) {
+        const found = DEPARTMENT_DATA.find(d => d.name.toLowerCase().includes('medical') || d.name.toLowerCase().includes('health'));
+        if (found) {
+          queryDept = found.name;
+          isSalaryQuery = true;
+        }
+      }
+    }
+
+    // Try to match designation (post)
+    const deptsToSearch = queryDept 
+      ? [DEPARTMENT_DATA.find(d => d.name === queryDept)!] 
+      : DEPARTMENT_DATA;
+
+    for (const d of deptsToSearch) {
+      for (const p of d.posts) {
+        if (cleanQuery.includes(p.title.toLowerCase())) {
+          queryPost = p.title;
+          if (!queryDept) {
+            queryDept = d.name;
+          }
+          if (!queryLevel) {
+            queryLevel = p.level;
+          }
+          if (!queryPay) {
+            queryPay = p.initialPay;
+          }
+          isSalaryQuery = true;
+          break;
+        }
+      }
+      if (queryPost) break;
+    }
+
+    // General keyword checks to fall back to salary query if user searches for "Rajasthan salary", "rsr salary", etc.
+    if (!isSalaryQuery) {
+      const salaryKeywords = ['salary', 'pay', 'allowance', 'da', 'hra', 'deduction', 'matrix', 'raj', 'rajasthan', 'rsr', 'gp', 'grade pay'];
+      if (salaryKeywords.some(k => cleanQuery.includes(k))) {
+        isSalaryQuery = true;
+      }
+    }
+
+    // Set default values if we identified it as a salary search query but some parts are missing
+    if (isSalaryQuery) {
+      if (!queryLevel) {
+        queryLevel = 'L-10'; // Default Level 10
+      }
+      if (!queryPay) {
+        const steps = PAY_MATRIX[queryLevel] || [33800];
+        queryPay = steps[0];
+      }
+
+      // Calculate dynamic salary results
+      const basic = queryPay;
+      const daRate = 60; // Current Rajasthan standard DA rate
+      const daAmount = Math.round((basic * daRate) / 100);
+      
+      // Check for cities in search query
+      let hraCategory: 'Y' | 'Z' = 'Z';
+      let cityName = 'Other Cities';
+      if (cleanQuery.includes('jaipur')) {
+        hraCategory = 'Y';
+        cityName = 'Jaipur';
+      } else if (cleanQuery.includes('jodhpur')) {
+        hraCategory = 'Y';
+        cityName = 'Jodhpur';
+      } else if (cleanQuery.includes('bikaner')) {
+        hraCategory = 'Y';
+        cityName = 'Bikaner';
+      } else if (cleanQuery.includes('ajmer')) {
+        hraCategory = 'Y';
+        cityName = 'Ajmer';
+      } else if (cleanQuery.includes('kota')) {
+        hraCategory = 'Y';
+        cityName = 'Kota';
+      }
+
+      const hraRate = hraCategory === 'Y' ? (daRate >= 50 ? 20 : 18) : (daRate >= 50 ? 10 : 9);
+      const hraAmount = Math.round((basic * hraRate) / 100);
+
+      // CCA
+      let ccaAmount = 0;
+      if (cityName === 'Jaipur') ccaAmount = basic <= 23100 ? 620 : 1000;
+      else if (['Bikaner', 'Jodhpur', 'Kota', 'Ajmer'].includes(cityName)) ccaAmount = basic <= 23100 ? 320 : 620;
+
+      const grossPay = basic + daAmount + hraAmount + ccaAmount;
+
+      // Deductions
+      const rghsDeduction = RGHS_SLABS.find(s => basic <= s.maxPay)?.rate || 875;
+      const gpfDeduction = GPF_SLABS.find(s => basic <= s.maxPay)?.rate || 10500;
+      const siDeduction = SI_SLABS.find(s => basic >= s.minPay && basic <= s.maxPay)?.rate || 2200;
+
+      const totalDeductions = rghsDeduction + gpfDeduction + siDeduction;
+      const netPay = Math.max(0, grossPay - totalDeductions);
+
+      calculatedSalary = {
+        basic,
+        da: daAmount,
+        hra: hraAmount,
+        cca: ccaAmount,
+        gross: grossPay,
+        deductions: totalDeductions,
+        net: netPay,
+        rghs: rghsDeduction,
+        gpf: gpfDeduction,
+        si: siDeduction
+      };
+    }
+  }
 
   const filteredTools = tools.filter(tool => 
     !tool.isOffline && 
     (activeCategory === 'All' || tool.category === activeCategory) &&
     (
+      (isSalaryQuery && tool.id === 'raj-salary') ||
       tool.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       tool.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
       tool.description.toLowerCase().includes(searchTerm.toLowerCase())
@@ -161,20 +367,86 @@ const Dashboard: React.FC<DashboardProps> = ({ searchTerm = '', tools, favorites
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2 px-2">
-          {categories.map(category => (
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 px-2">
+          <div className="flex flex-wrap gap-2">
+            {categories.map(category => (
+              <button
+                key={category}
+                onClick={() => setActiveCategory(category)}
+                className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${
+                  activeCategory === category
+                    ? 'bg-teal-600 text-white shadow-md'
+                    : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50 hover:text-teal-600'
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+
+          {/* View Mode Segmented Control */}
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl border border-slate-200/50 self-start lg:self-auto shrink-0">
             <button
-              key={category}
-              onClick={() => setActiveCategory(category)}
-              className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${
-                activeCategory === category
-                  ? 'bg-teal-600 text-white shadow-md'
-                  : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50 hover:text-teal-600'
+              onClick={() => handleViewModeChange('grid')}
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                viewMode === 'grid'
+                  ? 'bg-white text-teal-600 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-800'
               }`}
+              title="Comfortable Grid View"
             >
-              {category}
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                <rect x="14" y="14" width="7" height="7" rx="1.5" />
+              </svg>
+              <span className="hidden sm:inline">Grid</span>
             </button>
-          ))}
+            
+            <button
+              onClick={() => handleViewModeChange('compact')}
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                viewMode === 'compact'
+                  ? 'bg-white text-teal-600 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+              title="Compact Grid View"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="5" height="5" rx="1" />
+                <rect x="10" y="3" width="5" height="5" rx="1" />
+                <rect x="17" y="3" width="5" height="5" rx="1" />
+                <rect x="3" y="10" width="5" height="5" rx="1" />
+                <rect x="10" y="10" width="5" height="5" rx="1" />
+                <rect x="17" y="10" width="5" height="5" rx="1" />
+                <rect x="3" y="17" width="5" height="5" rx="1" />
+                <rect x="10" y="17" width="5" height="5" rx="1" />
+                <rect x="17" y="17" width="5" height="5" rx="1" />
+              </svg>
+              <span className="hidden sm:inline">Compact</span>
+            </button>
+
+            <button
+              onClick={() => handleViewModeChange('list')}
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                viewMode === 'list'
+                  ? 'bg-white text-teal-600 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+              title="List View"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <line x1="8" y1="6" x2="21" y2="6" />
+                <line x1="8" y1="12" x2="21" y2="12" />
+                <line x1="8" y1="18" x2="21" y2="18" />
+                <circle cx="4" cy="6" r="1" />
+                <circle cx="4" cy="12" r="1" />
+                <circle cx="4" cy="18" r="1" />
+              </svg>
+              <span className="hidden sm:inline">List</span>
+            </button>
+          </div>
         </div>
         
         {filteredTools.length > 0 ? (
@@ -188,29 +460,76 @@ const Dashboard: React.FC<DashboardProps> = ({ searchTerm = '', tools, favorites
                   </h3>
                   <div className="h-px bg-rose-100 flex-1"></div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-                  {tools.filter(tool => !tool.isOffline && favorites.includes(tool.id)).map((tool) => (
-                    <Link 
-                      key={`pinned-dash-${tool.id}`} 
-                      to={tool.path}
-                      className="group bg-white p-6 rounded-[2rem] border-2 border-rose-100 hover:border-rose-300 hover:shadow-2xl hover:shadow-rose-100/30 transition-all duration-300 flex flex-col active:scale-[0.98] relative"
-                    >
-                      {tool.isNew && (
-                        <div className="absolute -top-2 -right-2 z-20">
-                          <span className="bg-gradient-to-tr from-orange-600 to-amber-400 text-white text-[9px] font-black px-2.5 py-1 rounded-lg shadow-lg shadow-orange-500/20 uppercase tracking-widest animate-pulse-soft border border-orange-500/20">
-                            New
-                          </span>
-                        </div>
-                      )}
+                <div className={
+                  viewMode === 'grid'
+                    ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+                    : viewMode === 'compact'
+                    ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4"
+                    : "flex flex-col gap-2.5"
+                }>
+                  {tools.filter(tool => !tool.isOffline && favorites.includes(tool.id)).map((tool) => {
+                    if (viewMode === 'list') {
+                      return (
+                        <Link 
+                          key={`pinned-dash-${tool.id}`} 
+                          to={tool.path}
+                          className="group bg-white p-3 md:p-4 rounded-2xl border border-rose-100 hover:border-rose-300 hover:shadow-md transition-all duration-300 flex items-center justify-between gap-3 active:scale-[0.99] relative"
+                        >
+                          <div className="flex items-center gap-3.5 flex-1 min-w-0">
+                            <div className="text-2xl shrink-0 bg-rose-50/50 group-hover:bg-rose-50 p-2.5 rounded-xl transition-all">
+                              {tool.icon}
+                            </div>
+                            <div className="min-w-0 flex-1 sm:flex sm:items-center sm:justify-between sm:gap-4">
+                              <div>
+                                <h3 className="text-sm font-bold text-slate-800 group-hover:text-rose-700 transition-colors flex items-center gap-2">
+                                  {tool.name}
+                                  <span className="bg-rose-100 text-rose-800 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md">Pinned</span>
+                                </h3>
+                                <p className="text-xs text-slate-400 mt-0.5 font-bold uppercase tracking-widest sm:hidden">
+                                  {tool.category}
+                                </p>
+                                <p className="hidden md:block text-xs text-slate-400 line-clamp-1 mt-1 font-medium">
+                                  {tool.description}
+                                </p>
+                              </div>
+                              <span className="hidden sm:inline-block text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-slate-50 text-slate-400 group-hover:bg-teal-600 group-hover:text-white transition-all duration-300 shrink-0">
+                                {tool.category}
+                              </span>
+                            </div>
+                          </div>
 
-                      <div className="flex items-start justify-between mb-6">
-                        <div className="text-4xl bg-rose-50/50 group-hover:bg-rose-50 p-4 rounded-2xl transition-all duration-500 shrink-0 group-hover:scale-110 rotate-0 group-hover:rotate-6">
-                          {tool.icon}
-                        </div>
-                        <div className="flex flex-col items-end gap-2">
-                          <span className="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full bg-slate-100 text-slate-500 group-hover:bg-teal-600 group-hover:text-white transition-all duration-300">
-                            {tool.category}
-                          </span>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                toggleFavorite(tool.id);
+                              }}
+                              className="p-2 rounded-xl bg-rose-50 text-rose-500 hover:scale-110 transition-all duration-300"
+                              title="Unpin tool"
+                            >
+                              <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                              </svg>
+                            </button>
+                            <div className="p-2 rounded-xl border border-slate-100 text-slate-400 group-hover:text-rose-600 group-hover:bg-rose-50/50 transition-all">
+                              <svg className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                              </svg>
+                            </div>
+                          </div>
+                        </Link>
+                      );
+                    } else if (viewMode === 'compact') {
+                      return (
+                        <Link 
+                          key={`pinned-dash-${tool.id}`} 
+                          to={tool.path}
+                          className="group bg-white p-4 rounded-2xl border border-rose-100 hover:border-rose-300 hover:shadow-lg transition-all duration-300 flex flex-col active:scale-[0.98] relative text-center items-center justify-center min-h-[140px]"
+                        >
+                          <div className="text-3xl bg-rose-50/50 group-hover:bg-rose-50 p-2.5 rounded-xl transition-all duration-300 mb-2 shrink-0">
+                            {tool.icon}
+                          </div>
                           
                           <button
                             onClick={(e) => {
@@ -218,29 +537,70 @@ const Dashboard: React.FC<DashboardProps> = ({ searchTerm = '', tools, favorites
                               e.stopPropagation();
                               toggleFavorite(tool.id);
                             }}
-                            className="p-2 rounded-xl bg-rose-50 text-rose-500 hover:scale-110 transition-all duration-300"
+                            className="absolute top-2 right-2 p-1.5 rounded-lg bg-rose-50 text-rose-500 hover:scale-110 transition-all duration-300"
                             title="Unpin tool"
                           >
-                            <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                            <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
                               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
                             </svg>
                           </button>
-                        </div>
-                      </div>
-                      <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-rose-700 transition-colors">
-                        {tool.name}
-                      </h3>
-                      <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed flex-1">
-                        {tool.description}
-                      </p>
-                      <div className="mt-6 pt-6 border-t border-slate-50 flex items-center text-rose-600 font-bold text-xs group-hover:translate-x-1 transition-all">
-                        Launch Pinned Tool
-                        <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                        </svg>
-                      </div>
-                    </Link>
-                  ))}
+
+                          <h3 className="text-xs sm:text-sm font-bold text-slate-800 line-clamp-2 leading-tight group-hover:text-rose-700 transition-colors flex-1 flex items-center justify-center">
+                            {tool.name}
+                          </h3>
+                          <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 mt-1.5 shrink-0">
+                            {tool.category}
+                          </span>
+                        </Link>
+                      );
+                    } else {
+                      // Default Grid view
+                      return (
+                        <Link 
+                          key={`pinned-dash-${tool.id}`} 
+                          to={tool.path}
+                          className="group bg-white p-6 rounded-[2rem] border-2 border-rose-100 hover:border-rose-300 hover:shadow-2xl hover:shadow-rose-100/30 transition-all duration-300 flex flex-col active:scale-[0.98] relative"
+                        >
+                          <div className="flex items-start justify-between mb-6">
+                            <div className="text-4xl bg-rose-50/50 group-hover:bg-rose-50 p-4 rounded-2xl transition-all duration-500 shrink-0 group-hover:scale-110 rotate-0 group-hover:rotate-6">
+                              {tool.icon}
+                            </div>
+                            <div className="flex flex-col items-end gap-2">
+                              <span className="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full bg-slate-100 text-slate-500 group-hover:bg-teal-600 group-hover:text-white transition-all duration-300">
+                                {tool.category}
+                              </span>
+                              
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  toggleFavorite(tool.id);
+                                }}
+                                className="p-2 rounded-xl bg-rose-50 text-rose-500 hover:scale-110 transition-all duration-300"
+                                title="Unpin tool"
+                              >
+                                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                          <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-rose-700 transition-colors">
+                            {tool.name}
+                          </h3>
+                          <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed flex-1">
+                            {tool.description}
+                          </p>
+                          <div className="mt-6 pt-6 border-t border-slate-50 flex items-center text-rose-600 font-bold text-xs group-hover:translate-x-1 transition-all">
+                            Launch Pinned Tool
+                            <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                            </svg>
+                          </div>
+                        </Link>
+                      );
+                    }
+                  })}
                 </div>
               </div>
             )}
@@ -251,65 +611,274 @@ const Dashboard: React.FC<DashboardProps> = ({ searchTerm = '', tools, favorites
                   <h3 className="text-2xl font-bold text-slate-800">{category}</h3>
                   <div className="h-px bg-slate-200 flex-1"></div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-                  {filteredTools.filter(tool => tool.category === category).map((tool) => (
-                    <Link 
-                      key={tool.id} 
-                      to={tool.path}
-                      className="group bg-white p-6 rounded-[2rem] border border-slate-200 hover:border-teal-200 hover:shadow-2xl hover:shadow-teal-100/30 transition-all duration-300 flex flex-col active:scale-[0.98] relative"
-                    >
-                      {/* NEW Badge */}
-                      {tool.isNew && (
-                        <div className="absolute -top-2 -right-2 z-20">
-                          <span className="bg-gradient-to-tr from-orange-600 to-amber-400 text-white text-[9px] font-black px-2.5 py-1 rounded-lg shadow-lg shadow-orange-500/20 uppercase tracking-widest animate-pulse-soft border border-orange-500/20">
-                            New
-                          </span>
-                        </div>
-                      )}
+                <div className={
+                  viewMode === 'grid'
+                    ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+                    : viewMode === 'compact'
+                    ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4"
+                    : "flex flex-col gap-2.5"
+                }>
+                  {filteredTools.filter(tool => tool.category === category).map((tool) => {
+                    const hasLiveCalculations = tool.id === 'raj-salary' && calculatedSalary;
+                    const destinationPath = hasLiveCalculations
+                      ? `${tool.path}?dept=${encodeURIComponent(queryDept || 'None')}&post=${encodeURIComponent(queryPost || 'None')}&level=${queryLevel}&basic=${queryPay}`
+                      : tool.path;
 
-                      <div className="flex items-start justify-between mb-6">
-                        <div className="text-4xl bg-slate-50 group-hover:bg-teal-50 p-4 rounded-2xl transition-all duration-500 shrink-0 group-hover:scale-110 rotate-0 group-hover:rotate-6">
-                          {tool.icon}
-                        </div>
-                        <div className="flex flex-col items-end gap-2">
-                          <span className="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full bg-slate-100 text-slate-500 group-hover:bg-teal-600 group-hover:text-white transition-all duration-300">
-                            {tool.category}
-                          </span>
-                          
-                          {/* Heart Button */}
+                    if (viewMode === 'list') {
+                      return (
+                        <Link 
+                          key={tool.id} 
+                          to={destinationPath}
+                          className={`group bg-white p-3 md:p-4 rounded-2xl border transition-all duration-300 flex flex-col md:flex-row md:items-center justify-between gap-3 active:scale-[0.99] relative ${
+                            hasLiveCalculations
+                              ? 'border-teal-500 shadow-md shadow-teal-50/50 ring-2 ring-teal-50'
+                              : 'border-slate-200 hover:border-teal-200 hover:shadow-md'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3.5 flex-1 min-w-0">
+                            <div className={`text-2xl shrink-0 p-2.5 rounded-xl transition-all duration-500 ${
+                              hasLiveCalculations ? 'bg-teal-600 text-white shadow-md' : 'bg-slate-50 group-hover:bg-teal-50'
+                            }`}>
+                              {tool.icon}
+                            </div>
+                            <div className="min-w-0 flex-1 sm:flex sm:items-center sm:justify-between sm:gap-4">
+                              <div>
+                                <h3 className="text-sm font-bold text-slate-800 group-hover:text-teal-700 transition-colors flex items-center gap-2">
+                                  {tool.name}
+                                  {hasLiveCalculations && (
+                                    <span className="bg-teal-100 text-teal-800 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md">Live</span>
+                                  )}
+                                </h3>
+                                <p className="text-xs text-slate-400 mt-0.5 font-bold uppercase tracking-widest sm:hidden">
+                                  {tool.category}
+                                </p>
+                                <p className="hidden md:block text-xs text-slate-400 line-clamp-1 mt-1 font-medium">
+                                  {tool.description}
+                                </p>
+                              </div>
+
+                              {hasLiveCalculations && calculatedSalary ? (
+                                <div className="hidden sm:flex items-center gap-3 bg-teal-50/50 border border-teal-100/30 px-3 py-1.5 rounded-xl shrink-0">
+                                  <span className="text-[9px] font-black uppercase tracking-wider text-teal-600">Net Pay:</span>
+                                  <span className="text-xs font-black text-teal-700">₹{calculatedSalary.net.toLocaleString('en-IN')}</span>
+                                </div>
+                              ) : (
+                                <span className="hidden sm:inline-block text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-slate-50 text-slate-400 group-hover:bg-teal-600 group-hover:text-white transition-all duration-300 shrink-0">
+                                  {tool.category}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between md:justify-end gap-3 border-t border-slate-100 md:border-none pt-2 md:pt-0 shrink-0">
+                            <div className="sm:hidden text-xs">
+                              {hasLiveCalculations && calculatedSalary && (
+                                <div className="flex items-center gap-1.5 bg-teal-50 border border-teal-100/30 px-2 py-1 rounded-lg">
+                                  <span className="text-[9px] font-black uppercase tracking-wider text-teal-600">Net:</span>
+                                  <span className="font-extrabold text-teal-700">₹{calculatedSalary.net.toLocaleString('en-IN')}</span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  toggleFavorite(tool.id);
+                                }}
+                                className={`p-2 rounded-xl transition-all duration-300 ${
+                                  favorites.includes(tool.id)
+                                    ? 'bg-rose-50 text-rose-500 hover:scale-110'
+                                    : 'bg-slate-50 text-slate-300 hover:text-rose-400 hover:bg-rose-50 hover:scale-110'
+                                }`}
+                                title={favorites.includes(tool.id) ? "Remove PIN" : "PIN to top"}
+                              >
+                                <svg className={`w-3.5 h-3.5 ${favorites.includes(tool.id) ? 'fill-current' : 'stroke-current fill-none'}`} viewBox="0 0 24 24" strokeWidth="2.5">
+                                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                                </svg>
+                              </button>
+                              <div className={`p-2 rounded-xl border ${
+                                hasLiveCalculations ? 'border-teal-200 text-teal-600 bg-teal-50/50' : 'border-slate-100 text-slate-400 group-hover:text-teal-600 group-hover:bg-teal-50/50'
+                              } transition-all`}>
+                                <svg className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                </svg>
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      );
+                    } else if (viewMode === 'compact') {
+                      return (
+                        <Link 
+                          key={tool.id} 
+                          to={destinationPath}
+                          className={`group bg-white p-4 rounded-2xl border transition-all duration-300 flex flex-col active:scale-[0.98] relative text-center items-center justify-center min-h-[140px] ${
+                            hasLiveCalculations
+                              ? 'col-span-2 sm:col-span-2 lg:col-span-3 border-teal-500 shadow-xl shadow-teal-50/50 ring-4 ring-teal-50'
+                              : 'border-slate-200 hover:border-teal-200 hover:shadow-lg hover:shadow-teal-100/10'
+                          }`}
+                        >
+                          <div className={`text-3xl p-2.5 rounded-xl transition-all duration-300 mb-2 shrink-0 ${
+                            hasLiveCalculations ? 'bg-teal-600 text-white shadow-lg shadow-teal-100' : 'bg-slate-50 group-hover:bg-teal-50'
+                          }`}>
+                            {tool.icon}
+                          </div>
+
                           <button
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
                               toggleFavorite(tool.id);
                             }}
-                            className={`p-2 rounded-xl transition-all duration-300 ${
+                            className={`absolute top-2 right-2 p-1.5 rounded-lg transition-all duration-300 ${
                               favorites.includes(tool.id)
                                 ? 'bg-rose-50 text-rose-500 hover:scale-110'
                                 : 'bg-slate-50 text-slate-300 hover:text-rose-400 hover:bg-rose-50 hover:scale-110'
                             }`}
                             title={favorites.includes(tool.id) ? "Remove PIN" : "PIN to top"}
                           >
-                            <svg className={`w-4 h-4 ${favorites.includes(tool.id) ? 'fill-current' : 'stroke-current fill-none'}`} viewBox="0 0 24 24" strokeWidth="2.5">
+                            <svg className={`w-3.5 h-3.5 ${favorites.includes(tool.id) ? 'fill-current' : 'stroke-current fill-none'}`} viewBox="0 0 24 24" strokeWidth="2.5">
                               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
                             </svg>
                           </button>
-                        </div>
-                      </div>
-                      <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-teal-700 transition-colors">
-                        {tool.name}
-                      </h3>
-                      <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed flex-1">
-                        {tool.description}
-                      </p>
-                      <div className="mt-6 pt-6 border-t border-slate-50 flex items-center text-teal-600 font-bold text-xs group-hover:translate-x-1 transition-all">
-                        Launch Tool
-                        <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                        </svg>
-                      </div>
-                    </Link>
-                  ))}
+
+                          <h3 className="text-xs sm:text-sm font-bold text-slate-800 line-clamp-2 leading-tight group-hover:text-teal-700 transition-colors flex-1 flex items-center justify-center">
+                            {tool.name}
+                          </h3>
+
+                          <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 mt-1.5 shrink-0">
+                            {tool.category}
+                          </span>
+
+                          {hasLiveCalculations && calculatedSalary && (
+                            <div className="mt-2 w-full bg-slate-50 border border-slate-100 p-2 rounded-xl text-[10px] space-y-1 shrink-0">
+                              <div className="flex justify-between text-slate-500 font-bold">
+                                <span>Net Pay:</span>
+                                <span className="text-teal-600">₹{calculatedSalary.net.toLocaleString('en-IN')}</span>
+                              </div>
+                            </div>
+                          )}
+                        </Link>
+                      );
+                    } else {
+                      // Comfort Grid view
+                      return (
+                        <Link 
+                          key={tool.id} 
+                          to={destinationPath}
+                          className={`group bg-white p-6 rounded-[2rem] border transition-all duration-300 flex flex-col active:scale-[0.98] relative ${
+                            hasLiveCalculations
+                              ? 'col-span-1 sm:col-span-2 lg:col-span-2 border-teal-500 shadow-xl shadow-teal-50/50 ring-4 ring-teal-50'
+                              : 'border-slate-200 hover:border-teal-200 hover:shadow-2xl hover:shadow-teal-100/30'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between mb-6">
+                            <div className={`text-4xl p-4 rounded-2xl transition-all duration-500 shrink-0 group-hover:scale-110 rotate-0 group-hover:rotate-6 ${
+                              hasLiveCalculations ? 'bg-teal-600 text-white shadow-lg shadow-teal-100' : 'bg-slate-50 group-hover:bg-teal-50'
+                            }`}>
+                              {tool.icon}
+                            </div>
+                            <div className="flex flex-col items-end gap-2">
+                              <span className="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full bg-slate-100 text-slate-500 group-hover:bg-teal-600 group-hover:text-white transition-all duration-300">
+                                {tool.category}
+                              </span>
+                              
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  toggleFavorite(tool.id);
+                                }}
+                                className={`p-2 rounded-xl transition-all duration-300 ${
+                                  favorites.includes(tool.id)
+                                    ? 'bg-rose-50 text-rose-500 hover:scale-110'
+                                    : 'bg-slate-50 text-slate-300 hover:text-rose-400 hover:bg-rose-50 hover:scale-110'
+                                }`}
+                                title={favorites.includes(tool.id) ? "Remove PIN" : "PIN to top"}
+                              >
+                                <svg className={`w-4 h-4 ${favorites.includes(tool.id) ? 'fill-current' : 'stroke-current fill-none'}`} viewBox="0 0 24 24" strokeWidth="2.5">
+                                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                          <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-teal-700 transition-colors">
+                            {tool.name}
+                          </h3>
+                          
+                          {hasLiveCalculations && calculatedSalary ? (
+                            <div className="space-y-4 mt-2 flex-1">
+                              <p className="text-xs font-semibold text-teal-600 bg-teal-50 px-2.5 py-1 rounded-lg inline-block">
+                                ⚡ Live calculation results for your query
+                              </p>
+                              <div className="bg-slate-50 rounded-2xl p-4 space-y-3 border border-slate-100 text-xs">
+                                <div className="grid grid-cols-2 gap-2 text-slate-500 font-medium">
+                                  {queryDept && (
+                                    <div className="col-span-2 border-b border-slate-200/40 pb-1.5 mb-1">
+                                      <span className="text-[10px] uppercase font-black tracking-wider block text-slate-400">Department</span>
+                                      <span className="text-slate-700 font-bold line-clamp-1">{queryDept}</span>
+                                    </div>
+                                  )}
+                                  {queryPost && (
+                                    <div className="border-r border-slate-200/40 pr-2">
+                                      <span className="text-[10px] uppercase font-black tracking-wider block text-slate-400">Designation</span>
+                                      <span className="text-slate-700 font-bold line-clamp-1">{queryPost}</span>
+                                    </div>
+                                  )}
+                                  <div>
+                                    <span className="text-[10px] uppercase font-black tracking-wider block text-slate-400">Pay Level</span>
+                                    <span className="text-slate-700 font-bold">{queryLevel}</span>
+                                  </div>
+                                </div>
+
+                                <div className="border-t border-slate-200/60 pt-3 grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                                  <div className="bg-white p-2 rounded-xl border border-slate-100">
+                                    <span className="text-[9px] uppercase font-black text-slate-400 tracking-wider">Basic Pay</span>
+                                    <p className="text-xs sm:text-sm font-bold text-slate-800">₹{calculatedSalary.basic.toLocaleString('en-IN')}</p>
+                                  </div>
+                                  <div className="bg-white p-2 rounded-xl border border-slate-100">
+                                    <span className="text-[9px] uppercase font-black text-slate-400 tracking-wider">DA (60%)</span>
+                                    <p className="text-xs sm:text-sm font-bold text-slate-800">₹{calculatedSalary.da.toLocaleString('en-IN')}</p>
+                                  </div>
+                                  <div className="bg-white p-2 rounded-xl border border-slate-100">
+                                    <span className="text-[9px] uppercase font-black text-slate-400 tracking-wider">HRA</span>
+                                    <p className="text-xs sm:text-sm font-bold text-slate-800">₹{calculatedSalary.hra.toLocaleString('en-IN')}</p>
+                                  </div>
+                                  <div className="bg-teal-50/50 p-2 rounded-xl border border-teal-100/30">
+                                    <span className="text-[9px] uppercase font-black text-teal-600 tracking-wider">Gross Pay</span>
+                                    <p className="text-xs sm:text-sm font-extrabold text-teal-700">₹{calculatedSalary.gross.toLocaleString('en-IN')}</p>
+                                  </div>
+                                </div>
+
+                                <div className="border-t border-slate-200/60 pt-3 flex flex-col sm:flex-row justify-between items-center gap-3">
+                                  <div className="text-slate-500 font-medium text-center sm:text-left">
+                                    <span className="text-[10px] uppercase font-black text-slate-400 tracking-wider block">Total Deductions</span>
+                                    <span className="text-xs sm:text-sm font-bold text-rose-600">₹{calculatedSalary.deductions.toLocaleString('en-IN')}</span>
+                                  </div>
+                                  <div className="bg-gradient-to-r from-teal-500 to-emerald-500 text-white px-4 py-2 rounded-2xl shadow-md text-center flex-1 sm:flex-none w-full sm:w-auto">
+                                    <span className="text-[9px] uppercase font-black text-teal-100 tracking-wider block leading-none mb-1">Net Take-Home Pay</span>
+                                    <span className="text-sm sm:text-base font-black leading-none">₹{calculatedSalary.net.toLocaleString('en-IN')}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed flex-1">
+                              {tool.description}
+                            </p>
+                          )}
+
+                          <div className="mt-6 pt-6 border-t border-slate-50 flex items-center text-teal-600 font-bold text-xs group-hover:translate-x-1 transition-all">
+                            {hasLiveCalculations ? 'Open Full Salary Calculator' : 'Launch Tool'}
+                            <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                            </svg>
+                          </div>
+                        </Link>
+                      );
+                    }
+                  })}
                 </div>
               </div>
             ))}

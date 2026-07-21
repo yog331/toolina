@@ -73,7 +73,7 @@ export const TOOLS: Tool[] = [
     icon: '🧾',
     category: 'Utility',
     path: '/income-tax-calculator-new-old-regime',
-    isNew: true
+    isNew: false
   },
   {
     id: 'age-calc',
@@ -100,7 +100,7 @@ export const TOOLS: Tool[] = [
     icon: '🔥',
     category: 'Health',
     path: '/tdee-and-macronutrient-target-calculator',
-    isNew: true
+    isNew: false
   },
   {
     id: 'box-breathing',
@@ -109,7 +109,7 @@ export const TOOLS: Tool[] = [
     icon: '🌬️',
     category: 'Health',
     path: '/box-breathing-stress-relief-guide',
-    isNew: true
+    isNew: false
   },
   {
     id: 'utility-bill',
@@ -136,7 +136,7 @@ export const TOOLS: Tool[] = [
     icon: '📝',
     category: 'Utility',
     path: '/online-word-counter',
-    isNew: true
+    isNew: false
   },
   {
     id: 'barcode-generator',
@@ -145,7 +145,7 @@ export const TOOLS: Tool[] = [
     icon: '🏷️',
     category: 'Utility',
     path: '/barcode-generator',
-    isNew: true
+    isNew: false
   },
   {
     id: 'url-indexing',
@@ -154,7 +154,7 @@ export const TOOLS: Tool[] = [
     icon: '⚡',
     category: 'Developer',
     path: '/google-indexing-api-bulk-submitter',
-    isNew: true
+    isNew: false
   },
   {
     id: 'csv-json',
@@ -163,7 +163,7 @@ export const TOOLS: Tool[] = [
     icon: '⚙️',
     category: 'Developer',
     path: '/csv-to-json-converter',
-    isNew: true
+    isNew: false
   },
   {
     id: 'solar-calc',
@@ -172,7 +172,7 @@ export const TOOLS: Tool[] = [
     icon: '☀️',
     category: 'Utility',
     path: '/rooftop-solar-subsidy-calculator',
-    isNew: true
+    isNew: false
   },
   {
     id: 'img-conv',
@@ -199,7 +199,7 @@ export const TOOLS: Tool[] = [
     icon: '🧾',
     category: 'Govt',
     path: '/rajasthan-property-sale-deed-calculator',
-    isNew: true
+    isNew: false
   },
   {
     id: 'raj-gift-deed',
@@ -208,7 +208,7 @@ export const TOOLS: Tool[] = [
     icon: '🎁',
     category: 'Govt',
     path: '/rajasthan-property-gift-deed-calculator',
-    isNew: true
+    isNew: false
   },
   {
     id: 'raj-lease-deed',
@@ -217,7 +217,7 @@ export const TOOLS: Tool[] = [
     icon: '🏢',
     category: 'Govt',
     path: '/rajasthan-lease-deed-stamp-duty-calculator',
-    isNew: true
+    isNew: false
   },
   {
     id: 'pdf-to-image',
@@ -226,7 +226,7 @@ export const TOOLS: Tool[] = [
     icon: '📄',
     category: 'PDF Tools',
     path: '/pdf-to-image-high-quality-converter',
-    isNew: true
+    isNew: false
   },
   {
     id: 'image-to-pdf',
@@ -235,7 +235,7 @@ export const TOOLS: Tool[] = [
     icon: '🖼️',
     category: 'PDF Tools',
     path: '/image-to-pdf-combine-converter',
-    isNew: true
+    isNew: false
   },
   {
     id: 'merge-pdf',
@@ -244,7 +244,7 @@ export const TOOLS: Tool[] = [
     icon: '📑',
     category: 'PDF Tools',
     path: '/merge-pdf-combine-documents',
-    isNew: true
+    isNew: false
   },
   {
     id: 'split-pdf',
@@ -253,7 +253,7 @@ export const TOOLS: Tool[] = [
     icon: '✂️',
     category: 'PDF Tools',
     path: '/split-pdf-extract-pages',
-    isNew: true
+    isNew: false
   },
   {
     id: 'compress-pdf',
@@ -262,7 +262,7 @@ export const TOOLS: Tool[] = [
     icon: '🗜️',
     category: 'PDF Tools',
     path: '/compress-pdf-reduce-file-size',
-    isNew: true
+    isNew: false
   },
   {
     id: 'remove-pdf-pages',
@@ -271,7 +271,7 @@ export const TOOLS: Tool[] = [
     icon: '🗑️',
     category: 'PDF Tools',
     path: '/remove-pdf-pages-delete-securely',
-    isNew: true
+    isNew: false
   },
   {
     id: 'add-pdf-watermark',
@@ -280,7 +280,7 @@ export const TOOLS: Tool[] = [
     icon: '©️',
     category: 'PDF Tools',
     path: '/add-watermark-to-pdf-online',
-    isNew: true
+    isNew: false
   },
   {
     id: 'unlock-pdf',
@@ -289,7 +289,7 @@ export const TOOLS: Tool[] = [
     icon: '🔓',
     category: 'PDF Tools',
     path: '/unlock-pdf-remove-password',
-    isNew: true
+    isNew: false
   },
   {
     id: 'online-json-formatter',
@@ -298,6 +298,24 @@ export const TOOLS: Tool[] = [
     icon: '{ }',
     category: 'Developer',
     path: '/online-json-formatter-and-validator',
-    isNew: true
+    isNew: false
+  },
+  {
+    id: 'universal-converter',
+    name: 'Universal Unit Converter',
+    description: 'Convert measurements instantly across Length, Area (Bigha, Hectare, Gaj), Weight, Volume, Temperature, Time, and Data storage.',
+    icon: '⚖️',
+    category: 'Utility',
+    path: '/universal-unit-converter',
+    isNew: false
+  },
+  {
+    id: 'quick-math-calculator',
+    name: 'Quick Math Calculator',
+    description: 'Fast online solver for standard equations, scientific formulas, and instant two-way unit conversion shortcuts.',
+    icon: '🧮',
+    category: 'Utility',
+    path: '/quick-math-calculator-online',
+    isNew: false
   }
 ];

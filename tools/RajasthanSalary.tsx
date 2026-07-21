@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import AccompanyingText from '../components/AccompanyingText';
 import ShareWidget from '../components/ShareWidget';
 import SEO from '../components/SEO';
@@ -91,7 +92,7 @@ const RajasthanSalary: React.FC = () => {
     post: 'None',
     basicPay: 33800,
     level: 'L-10',
-    daRate: 58,
+    daRate: 60,
     hraCategory: 'Z',
     cityName: 'Other Cities',
     hasCca: true,
@@ -123,6 +124,82 @@ const RajasthanSalary: React.FC = () => {
       })
       .catch(err => console.error("Failed to fetch DA rate:", err));
   }, []);
+
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const deptParam = searchParams.get('dept') || searchParams.get('department');
+    const postParam = searchParams.get('post') || searchParams.get('designation') || searchParams.get('desig');
+    const levelParam = searchParams.get('level');
+    const basicParam = searchParams.get('basic') || searchParams.get('basicPay') || searchParams.get('pay');
+
+    if (deptParam || postParam || levelParam || basicParam) {
+      setSalary(prev => {
+        let targetDept = prev.department;
+        let targetPost = prev.post;
+        let targetLevel = prev.level;
+        let targetBasic = prev.basicPay;
+
+        if (deptParam) {
+          const matchedDept = DEPARTMENT_DATA.find(d => 
+            d.name.toLowerCase() === deptParam.toLowerCase() || 
+            d.name.toLowerCase().includes(deptParam.toLowerCase())
+          );
+          if (matchedDept) {
+            targetDept = matchedDept.name;
+            if (matchedDept.posts.length > 0) {
+              targetPost = matchedDept.posts[0].title;
+              targetLevel = matchedDept.posts[0].level;
+              targetBasic = matchedDept.posts[0].initialPay;
+            }
+          }
+        }
+
+        if (postParam) {
+          const searchDepts = deptParam ? (DEPARTMENT_DATA.filter(d => d.name === targetDept)) : DEPARTMENT_DATA;
+          for (const d of searchDepts) {
+            const matchedPost = d.posts.find(p => 
+              p.title.toLowerCase() === postParam.toLowerCase() || 
+              p.title.toLowerCase().includes(postParam.toLowerCase())
+            );
+            if (matchedPost) {
+              targetDept = d.name;
+              targetPost = matchedPost.title;
+              targetLevel = matchedPost.level;
+              targetBasic = matchedPost.initialPay;
+              break;
+            }
+          }
+        }
+
+        if (levelParam) {
+          const upperLevel = levelParam.toUpperCase();
+          if (PAY_LEVELS.includes(upperLevel)) {
+            targetLevel = upperLevel;
+            const matrixVals = PAY_MATRIX[upperLevel] || [];
+            if (matrixVals.length > 0) {
+              targetBasic = matrixVals[0];
+            }
+          }
+        }
+
+        if (basicParam) {
+          const bpNum = parseInt(basicParam);
+          if (!isNaN(bpNum)) {
+            targetBasic = bpNum;
+          }
+        }
+
+        return {
+          ...prev,
+          department: targetDept,
+          post: targetPost,
+          level: targetLevel,
+          basicPay: targetBasic
+        };
+      });
+    }
+  }, [searchParams]);
 
   const currentDepartment = useMemo(() => 
     DEPARTMENT_DATA.find(d => d.name === salary.department) || null
@@ -307,6 +384,25 @@ const RajasthanSalary: React.FC = () => {
     ...(results.arrearsAmount > 0 ? [{ name: 'Arrears', value: results.arrearsAmount }] : []),
   ];
 
+  const seoTitle = useMemo(() => {
+    if (salary.department && salary.post) {
+      return `${salary.post} (${salary.level}) Salary Calculator - Rajasthan ${salary.department} | Toolina`;
+    }
+    if (salary.level) {
+      return `${salary.level} Pay Scale Salary Calculator - Rajasthan 7th Pay Matrix | Toolina`;
+    }
+    return "Rajasthan Govt Salary Calculator - 7th Pay Commission | Toolina";
+  }, [salary.department, salary.post, salary.level]);
+
+  const seoDescription = useMemo(() => {
+    const basic = Number(salary.basicPay) || 0;
+    const net = results.netPay;
+    if (salary.post) {
+      return `Calculate exact monthly salary for ${salary.post} in Rajasthan. Current Basic Pay: ₹${basic.toLocaleString('en-IN')}, Estimated Net Take-Home Pay: ₹${net.toLocaleString('en-IN')} with 60% DA and HRA allowances.`;
+    }
+    return "Calculate Rajasthan Government employee salary with 7th Pay Commission pay matrix. Get accurate DA, HRA, GPF, SI, RGHS, and net take-home salary.";
+  }, [salary.post, salary.basicPay, results.netPay]);
+
   const takeHomeRatio = results.grossPay > 0 ? Math.round((results.netPay / results.grossPay) * 100) : 0;
 
   const colorMap: Record<string, { text: string, bg: string }> = {
@@ -319,7 +415,7 @@ const RajasthanSalary: React.FC = () => {
 
   return (
     <article className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-20">
-      <SEO title="Rajasthan Govt Salary Calculator - 7th Pay Commission | Toolina" description="Free professional calculator and internal tool by Toolina. Accurate, fast, and easy to use." 
+      <SEO title={seoTitle} description={seoDescription} 
         structuredData={{
           "@context": "https://schema.org",
           "@type": "SoftwareApplication",

@@ -7,6 +7,7 @@ import Dashboard from './components/Dashboard';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 import Breadcrumb from './components/Breadcrumb';
+import ToolFeedback from './components/ToolFeedback';
 import { TOOLS } from './constants';
 import { Tool } from './types';
 
@@ -37,6 +38,8 @@ const IncomeTaxCalculator = React.lazy(() => import('./tools/IncomeTaxCalculator
 const PdfSuite = React.lazy(() => import('./tools/PdfSuite'));
 const PlaceholderTool = React.lazy(() => import('./tools/PlaceholderTool'));
 const OnlineJsonFormatter = React.lazy(() => import('./tools/OnlineJsonFormatter'));
+const UniversalConverter = React.lazy(() => import('./tools/UniversalConverter'));
+const QuickMath = React.lazy(() => import('./tools/QuickMath'));
 
 // Legal, Support & Admin
 const PrivacyPolicy = React.lazy(() => import('./tools/PrivacyPolicy'));
@@ -165,6 +168,8 @@ const App: React.FC = () => {
                 <Route path="/add-watermark-to-pdf-online" element={<PdfSuite defaultTool="add-pdf-watermark" />} />
                 <Route path="/unlock-pdf-remove-password" element={<PdfSuite defaultTool="unlock-pdf" />} />
                 <Route path="/online-json-formatter-and-validator" element={<OnlineJsonFormatter />} />
+                <Route path="/universal-unit-converter" element={<UniversalConverter />} />
+                <Route path="/quick-math-calculator-online" element={<QuickMath />} />
 
                 {/* Permanent Redirects for Old Slugs to retain SEO Ranking */}
                 <Route path="/age-calc" element={<Navigate to="/chronological-age-calculator" replace />} />
@@ -199,6 +204,8 @@ const App: React.FC = () => {
                 <Route path="/url-indexing" element={<Navigate to="/google-indexing-api-bulk-submitter" replace />} />
                 <Route path="/tdee-calc" element={<Navigate to="/tdee-and-macronutrient-target-calculator" replace />} />
                 <Route path="/box-breathing" element={<Navigate to="/box-breathing-stress-relief-guide" replace />} />
+                <Route path="/universal-converter" element={<Navigate to="/universal-unit-converter" replace />} />
+                <Route path="/quick-math" element={<Navigate to="/quick-math-calculator-online" replace />} />
                 
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/privacy-policy-raj-salary-app" element={<PrivacyPolicyRajSalaryApp />} />
@@ -214,6 +221,7 @@ const App: React.FC = () => {
               </Routes>
               </React.Suspense>
             </div>
+            <ToolFeedback />
             <Footer />
           </main>
         </div>

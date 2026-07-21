@@ -4,6 +4,7 @@ import AccompanyingText from '../components/AccompanyingText';
 import ShareWidget from '../components/ShareWidget';
 import SEO from '../components/SEO';
 import StarRatingWidget from '../components/StarRatingWidget';
+import AdUnit from '../components/AdUnit';
 import { 
   PAY_LEVELS, 
   PAY_MATRIX,
@@ -461,6 +462,9 @@ const RajasthanSalary: React.FC = () => {
         </div>
       </header>
 
+      {/* Top Banner Ad */}
+      <AdUnit slot="rajasthan-salary-top-banner" format="horizontal" />
+
       <main className="space-y-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Column: Inputs */}
@@ -817,6 +821,9 @@ const RajasthanSalary: React.FC = () => {
               </div>
             </section>
 
+            {/* Mid-feed In-article Ad */}
+            <AdUnit slot="rajasthan-salary-mid-feed" format="fluid" />
+
             {/* 3. Deductions & Savings */}
             <section className="bg-white p-6 md:p-8 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-8 relative overflow-hidden">
               <div className="absolute bottom-0 left-0 w-32 h-32 bg-rose-50 rounded-full -ml-16 -mb-16 opacity-50"></div>
@@ -1122,6 +1129,9 @@ const RajasthanSalary: React.FC = () => {
                 DA is usually revised twice a year (Jan & July). Ensure you have the latest rate for accurate results. HRA categories are based on population census.
               </p>
             </div>
+
+            {/* Sidebar Square/Rectangle Ad */}
+            <AdUnit slot="rajasthan-salary-sidebar" format="rectangle" />
 
             {/* Mobile App Promotion */}
             <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-[2rem] p-6 border border-slate-700 shadow-xl relative overflow-hidden group">

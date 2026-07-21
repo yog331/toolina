@@ -250,7 +250,74 @@ const CentralSalary: React.FC = () => {
         </div>
       </footer>
     
-      
+      {/* Hinglish SEO on-page guide */}
+      <section className="bg-white p-6 md:p-10 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-8">
+        <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+          <div className="w-10 h-10 rounded-2xl bg-teal-100 text-teal-600 flex items-center justify-center font-bold">
+            📊
+          </div>
+          <h2 className="text-xl md:text-2xl font-display font-black text-slate-900 tracking-tight">
+            Central Government Employee Salary Structure Explained (Hinglish Guide)
+          </h2>
+        </div>
+        
+        <p className="text-sm md:text-base text-slate-600 leading-relaxed">
+          Kya aap Central Government ke kisi vibhag (jaise Railways, Defence, Post, Income Tax, Central GST, ya anya Ministries) me employed hain? Central Govt employees ki monthly take-home salary calculate karne ke liye hamara <strong>7th Pay Commission Pro Calculator</strong> ekdum authentic calculations deta hai. 
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+          <div className="space-y-3">
+            <h3 className="text-base font-black text-slate-800">
+              1. Central Govt Salary Formula Kya Hai?
+            </h3>
+            <p className="text-xs md:text-sm text-slate-600 leading-relaxed">
+              Ek central employee ki net salary is tarike se calculate ki jati hai:<br/>
+              <strong>Gross Salary = Basic Pay + Dearness Allowance (DA) + House Rent Allowance (HRA) + Transport Allowance (TPTA) + DA on TPTA</strong>.<br/>
+              Is Gross amount me se NPS, CGHS, aur CGEGIS ke deductions minus karne par final Net Cash in Hand milti hai.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-base font-black text-slate-800">
+              2. DA (Dearness Allowance) Rules & Current Rate
+            </h3>
+            <p className="text-xs md:text-sm text-slate-600 leading-relaxed">
+              AICPIN (All India Consumer Price Index) reports ke standard updates ke sath, central govt dearness allowance badhati rahti hai. Sabse latest DA rate change se aapki final take-home pay badh jati hai. Hamara tool hamesha accurate and updated live configuration run karta hai taaki aap online salary aasani se track kar sakein.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-base font-black text-slate-800">
+              3. City Class (X, Y, Z) and House Rent Allowance (HRA)
+            </h3>
+            <p className="text-xs md:text-sm text-slate-600 leading-relaxed">
+              7th CPC regulations ke anusar, jab DA 50% ko cross karta hai tab HRA rates revise hokar <strong>X-Class cities ke liye 30%</strong>, <strong>Y-Class ke liye 20%</strong>, aur <strong>Z-Class ke liye 10%</strong> ho jate hain. Class X me Metro cities aati hain, Class Y me standard tier-2 cities, aur baki areas Class Z ke antargat aate hain.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-base font-black text-slate-800">
+              4. National Pension System (NPS) Deduction Slab
+            </h3>
+            <p className="text-xs md:text-sm text-slate-600 leading-relaxed">
+              Central government rules ke mutabik monthly NPS contribution mandatory hai. Employee ke <strong>(Basic Pay + DA) ka 10%</strong> NPS scheme me direct deduct kiya jata hai. Iske alawa, Central Government Health Scheme (CGHS) and CGEGIS charges pay level ke slabs ke standard ratings par deduct hote hain.
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-teal-50/50 p-6 rounded-3xl border border-teal-100/80 text-teal-950 space-y-2">
+          <h4 className="text-xs font-black uppercase tracking-widest text-teal-800">
+            Online Salary Calculation Steps:
+          </h4>
+          <ul className="list-decimal pl-5 space-y-1 text-xs md:text-sm text-teal-900/90 font-medium">
+            <li>Apna current <strong>Basic Pay</strong> value input box me fill karein.</li>
+            <li>Sahi monthly estimation ke liye current <strong>DA percentage</strong> set karein.</li>
+            <li>Apni posted city class choose karein: <strong>X</strong> (Metros like Mumbai, Delhi), <strong>Y</strong> (Jaipur, Lucknow), ya <strong>Z</strong> (Rural/small town areas).</li>
+            <li>Agar aapki posting TPTA list ki listed High-TA cities me hai, toh <strong>High TPTA City</strong> toggle on karein.</li>
+            <li>Sari details bharte hi niche auto-calculate hokar aapki exact monthly detailed gross and net pay generate ho jayegi!</li>
+          </ul>
+        </div>
+      </section>
       
       <AccompanyingText 
         toolName="Central Salary"

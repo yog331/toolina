@@ -1203,7 +1203,72 @@ const RajasthanSalary: React.FC = () => {
         </div>
       </footer>
     
-      
+      {/* Hinglish SEO on-page guide */}
+      <section className="bg-white p-6 md:p-10 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-8">
+        <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+          <div className="w-10 h-10 rounded-2xl bg-teal-100 text-teal-600 flex items-center justify-center font-bold">
+            💡
+          </div>
+          <h2 className="text-xl md:text-2xl font-display font-black text-slate-900 tracking-tight">
+            Rajasthan Govt Salary Guide & Calculator (Hinglish Help)
+          </h2>
+        </div>
+        
+        <p className="text-sm md:text-base text-slate-600 leading-relaxed">
+          Kya aap ek Rajasthan Government Employee hain aur apni <strong>7th Pay Commission monthly salary</strong>, <strong>Dearness Allowance (DA)</strong>, aur <strong>House Rent Allowance (HRA)</strong> ko online compute karna chahte hain? Sabhi departments (jaise Education, Police, Revenue, State GST, and Health) ke employees ke liye salary check karne ka yeh sabse reliable aur automated tool hai.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+          <div className="space-y-3">
+            <h3 className="text-base font-black text-slate-800">
+              1. Salary Calculation Kaise Hoti Hai?
+            </h3>
+            <p className="text-xs md:text-sm text-slate-600 leading-relaxed">
+              Rajasthan government employee ki gross pay primary teen components se banti hai: <strong>Basic Pay</strong> (jo aapke L-1 se L-24 matrix level par depend karta hai), current <strong>Dearness Allowance (DA)</strong>, aur aapke city category ke mutabik mila <strong>HRA (House Rent Allowance)</strong>. Inme anya benefits jaise CCA, Special Pay, ya Hard Duty Allowances ko bhi add kiya jata hai.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-base font-black text-slate-800">
+              2. Probationer Trainee Salary Kitni Hoti Hai?
+            </h3>
+            <p className="text-xs md:text-sm text-slate-600 leading-relaxed">
+              Rajasthan Service Rules (RSR Rule 16) ke hisab se, starting ke 2 saal ka probation period mandatory hota hai. Is <strong>2 years probation period</strong> ke dauran employee ko ek <strong>Fixed Remuneration</strong> (Niyat Masik Vetany) milti hai. Isme DA, HRA, CCA, ya koi extra allowances nahi milte hain. Sirf RGHS aur applicable Income Tax deduct hota hai.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-base font-black text-slate-800">
+              3. GPF and RGHS Deductions List
+            </h3>
+            <p className="text-xs md:text-sm text-slate-600 leading-relaxed">
+              Gross pay se statutory deductions hote hain: State Insurance (SI), Rajasthan Government Health Scheme (RGHS), aur <strong>General Provident Fund (GPF)</strong> ya NPS. Hamara calculator automatically aapke level ke anusar minimum GPF deduction slab select kar leta hai, jise aap chahein toh badha bhi sakte hain.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-base font-black text-slate-800">
+              4. City Category (X, Y, Z) Rules for HRA
+            </h3>
+            <p className="text-xs md:text-sm text-slate-600 leading-relaxed">
+              Rajasthan me HRA rate cities par nirbhar karta hai. Jaipur, Jodhpur, Ajmer, Kota, aur Bikaner jaisi Class Y cities me <strong>HRA rate high (Y Category)</strong> hota hai, jabki baki sabhi locations Standard HRA Class Z me aate hain. Hamara tool automatically current rules ke anusar exact HRA apply karta hai.
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-teal-50/50 p-6 rounded-3xl border border-teal-100/80 text-teal-950 space-y-2">
+          <h4 className="text-xs font-black uppercase tracking-widest text-teal-800">
+            Quick Steps: Online Salary Kaise Check Karein?
+          </h4>
+          <ul className="list-decimal pl-5 space-y-1 text-xs md:text-sm text-teal-900/90 font-medium">
+            <li>Sabse pehle dropdown se apna <strong>Department</strong> aur <strong>Designation/Post</strong> select karein.</li>
+            <li>Apna current <strong>7th CPC Pay Level (L-1 se L-24)</strong> aur basic pay select karein.</li>
+            <li>Agar aap abhi nayi joining me hain, toh <strong>Probationer Trainee</strong> checkbox/dropdown opt karein.</li>
+            <li>Apna shehar (City) choose karein taaki sahi HRA aur CCA system calculate kar sake.</li>
+            <li>Kuch hi seconds me aapki precise <strong>Gross Salary, Deductions, and Net Take-home cash in hand</strong> screen par display ho jayegi!</li>
+          </ul>
+        </div>
+      </section>
       
       <AccompanyingText 
         toolName="Rajasthan Salary"

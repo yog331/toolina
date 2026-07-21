@@ -18,3 +18,27 @@ root.render(
     </HelmetProvider>
   </React.StrictMode>
 );
+
+// Register Service Worker for PWA support
+if ('serviceWorker' in navigator && (import.meta.env.PROD)) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then((registration) => {
+        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+      })
+      .catch((err) => {
+        console.error('ServiceWorker registration failed: ', err);
+      });
+  });
+} else if ('serviceWorker' in navigator) {
+  // In development, we can still register it to test offline features if desired
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then((registration) => {
+        console.log('ServiceWorker registered in development mode: ', registration.scope);
+      })
+      .catch((err) => {
+        console.warn('ServiceWorker dev registration failed: ', err);
+      });
+  });
+}

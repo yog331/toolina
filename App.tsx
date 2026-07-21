@@ -7,7 +7,6 @@ import Dashboard from './components/Dashboard';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 import Breadcrumb from './components/Breadcrumb';
-import ToolFeedback from './components/ToolFeedback';
 import PWABanner from './components/PWABanner';
 import { TOOLS } from './constants';
 import { Tool } from './types';
@@ -222,7 +221,6 @@ const App: React.FC = () => {
               </Routes>
               </React.Suspense>
             </div>
-            <ToolFeedback />
             <Footer />
             <PWABanner />
           </main>

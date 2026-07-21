@@ -5,48 +5,179 @@ import AdUnit from '../components/AdUnit';
 
 const ContactUs: React.FC = () => {
   const [formStatus, setFormStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
-  const [formData, setFormData] = useState({ name: '', email: '', subject: 'General Inquiry', message: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', mobile: '', subject: 'General Inquiry', message: '' });
+  const [errors, setErrors] = useState<{ name?: string; email?: string; mobile?: string; subject?: string; message?: string }>({});
+  const [turnstileToken, setTurnstileToken] = useState<string>('');
+  const [turnstileError, setTurnstileError] = useState<string>('');
 
   useEffect(() => {
+    // 1. Define window callback for Turnstile
+    (window as any).onloadTurnstileCallback = () => {
+      if ((window as any).turnstile) {
+        try {
+          (window as any).turnstile.render('#turnstile-container', {
+            sitekey: import.meta.env.VITE_TURNSTILE_SITEKEY || '1x00000000000000000000AA',
+            callback: (token: string) => {
+              setTurnstileToken(token);
+              setTurnstileError('');
+            },
+            'expired-callback': () => {
+              setTurnstileToken('');
+            },
+            'error-callback': () => {
+              setTurnstileToken('');
+              setTurnstileError('Turnstile verification failed to load. Please refresh and try again.');
+            }
+          });
+        } catch (e) {
+          console.warn("Turnstile render error:", e);
+        }
+      }
+    };
+
+    // 2. Load the Turnstile script dynamically
+    const scriptId = 'cloudflare-turnstile-script';
+    let script = document.getElementById(scriptId) as HTMLScriptElement;
+    if (!script) {
+      script = document.createElement('script');
+      script.id = scriptId;
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback';
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    } else {
+      // If script is already loaded, invoke the callback directly
+      if ((window as any).turnstile) {
+        try {
+          (window as any).onloadTurnstileCallback();
+        } catch (e) {
+          console.warn("Turnstile callback trigger error:", e);
+        }
+      }
+    }
+
+    return () => {
+      // Cleanup the callback
+      delete (window as any).onloadTurnstileCallback;
+      // We don't remove the script from head to allow other pages to reuse it,
+      // but we do clean up the turnstile container state if needed.
+    };
   }, []);
+
+  const handleInputChange = (field: keyof typeof formData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Frontend validation
+    const errorsMap: typeof errors = {};
+    
+    const trimmedName = formData.name.trim();
+    if (!trimmedName) {
+      errorsMap.name = 'Full name is required.';
+    } else if (trimmedName.length < 2) {
+      errorsMap.name = 'Full name must be at least 2 characters.';
+    } else if (trimmedName.length > 100) {
+      errorsMap.name = 'Full name cannot exceed 100 characters.';
+    } else if (!/^[a-zA-ZÀ-ÿ\s.'’-]+$/.test(trimmedName)) {
+      errorsMap.name = 'Full name can only contain letters, spaces, and basic punctuation.';
+    }
+
+    const trimmedEmail = formData.email.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!trimmedEmail) {
+      errorsMap.email = 'Email address is required.';
+    } else if (trimmedEmail.length > 100) {
+      errorsMap.email = 'Email address cannot exceed 100 characters.';
+    } else if (!emailRegex.test(trimmedEmail)) {
+      errorsMap.email = 'Please enter a valid email address.';
+    }
+
+    const trimmedMobile = formData.mobile.trim();
+    if (trimmedMobile) {
+      if (trimmedMobile.length < 7 || trimmedMobile.length > 20) {
+        errorsMap.mobile = 'Mobile number must be between 7 and 20 characters.';
+      } else if (!/^\+?[0-9\s\-()]+$/.test(trimmedMobile)) {
+        errorsMap.mobile = 'Please enter a valid phone number (numbers, +, -, spaces, or parentheses).';
+      }
+    }
+
+    const trimmedMessage = formData.message.trim();
+    if (!trimmedMessage) {
+      errorsMap.message = 'Message body is required.';
+    } else if (trimmedMessage.length < 10) {
+      errorsMap.message = 'Message must be at least 10 characters long.';
+    } else if (trimmedMessage.length > 5000) {
+      errorsMap.message = 'Message cannot exceed 5000 characters.';
+    }
+
+    if (Object.keys(errorsMap).length > 0) {
+      setErrors(errorsMap);
+      return;
+    }
+
+    if (!turnstileToken) {
+      setTurnstileError('Please complete the Turnstile anti-bot verification.');
+      return;
+    }
+
     setFormStatus('sending');
+    setTurnstileError('');
     
     try {
       // Create a new feedback object
       const newFeedback = {
         id: Date.now().toString(),
-        user: formData.name,
-        email: formData.email,
-        message: formData.message,
+        user: trimmedName,
+        email: trimmedEmail,
+        mobile: trimmedMobile,
+        message: trimmedMessage,
         type: formData.subject.includes('Bug') ? 'bug' : formData.subject.includes('Suggestion') ? 'feature' : 'general',
-        status: 'new',
+        status: 'New',
         date: new Date().toISOString().split('T')[0]
       };
-
-      // Fetch existing feedback first
-      const response = await fetch('/api/feedback');
-      const existingFeedback = await response.json();
       
-      // Add new feedback to the beginning of the list
-      const updatedFeedback = [newFeedback, ...(Array.isArray(existingFeedback) ? existingFeedback : [])];
-      
-      // Save the updated list back to the database
-      await fetch('/api/feedback', {
+      // Save the single new feedback directly to the database with the Turnstile token in headers
+      const postResponse = await fetch('/api/feedback', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedFeedback)
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-Turnstile-Token': turnstileToken
+        },
+        body: JSON.stringify(newFeedback)
       });
 
+      if (!postResponse.ok) {
+        const errData = await postResponse.json().catch(() => ({}));
+        throw new Error(errData.error || 'Server rejected submission');
+      }
+
       setFormStatus('sent');
-      setFormData({ name: '', email: '', subject: 'General Inquiry', message: '' });
-    } catch (error) {
+      setTurnstileToken('');
+      setFormData({ name: '', email: '', mobile: '', subject: 'General Inquiry', message: '' });
+      setErrors({});
+      
+      // Reset Turnstile widget
+      if ((window as any).turnstile) {
+        try {
+          (window as any).turnstile.reset('#turnstile-container');
+        } catch (e) {
+          console.warn("Turnstile reset error:", e);
+        }
+      }
+    } catch (error: any) {
       console.error("Failed to submit feedback:", error);
-      // Fallback to success state anyway for UX, but log the error
-      setFormStatus('sent');
-      setFormData({ name: '', email: '', subject: 'General Inquiry', message: '' });
+      setTurnstileError(error.message || "Failed to deliver message. Please try again.");
+      setFormStatus('idle');
     }
   };
 
@@ -97,10 +228,15 @@ const ContactUs: React.FC = () => {
                       required
                       type="text" 
                       value={formData.name}
-                      onChange={(e) => setFormData({...formData, name: e.target.value})}
-                      className="w-full px-4 py-3 md:px-5 md:py-4 bg-slate-50 border border-slate-200 rounded-xl md:rounded-2xl outline-none focus:ring-4 ring-teal-50 transition-all font-bold text-slate-800 text-sm md:text-base"
+                      onChange={(e) => handleInputChange('name', e.target.value)}
+                      className={`w-full px-4 py-3 md:px-5 md:py-4 bg-slate-50 border rounded-xl md:rounded-2xl outline-none focus:ring-4 transition-all font-bold text-slate-800 text-sm md:text-base ${errors.name ? 'border-rose-300 focus:ring-rose-100' : 'border-slate-200 focus:ring-teal-50'}`}
                       placeholder="e.g. John Doe"
                     />
+                    {errors.name && (
+                      <span className="text-xs text-rose-500 font-bold block mt-1 ml-1">
+                        ⚠️ {errors.name}
+                      </span>
+                    )}
                   </div>
                   <div className="space-y-1.5 md:space-y-2">
                     <label className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
@@ -108,18 +244,39 @@ const ContactUs: React.FC = () => {
                       required
                       type="email" 
                       value={formData.email}
-                      onChange={(e) => setFormData({...formData, email: e.target.value})}
-                      className="w-full px-4 py-3 md:px-5 md:py-4 bg-slate-50 border border-slate-200 rounded-xl md:rounded-2xl outline-none focus:ring-4 ring-teal-50 transition-all font-bold text-slate-800 text-sm md:text-base"
+                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      className={`w-full px-4 py-3 md:px-5 md:py-4 bg-slate-50 border rounded-xl md:rounded-2xl outline-none focus:ring-4 transition-all font-bold text-slate-800 text-sm md:text-base ${errors.email ? 'border-rose-300 focus:ring-rose-100' : 'border-slate-200 focus:ring-teal-50'}`}
                       placeholder="hello@example.com"
                     />
+                    {errors.email && (
+                      <span className="text-xs text-rose-500 font-bold block mt-1 ml-1">
+                        ⚠️ {errors.email}
+                      </span>
+                    )}
                   </div>
+                </div>
+
+                <div className="space-y-1.5 md:space-y-2">
+                  <label className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mobile Number</label>
+                  <input 
+                    type="tel" 
+                    value={formData.mobile}
+                    onChange={(e) => handleInputChange('mobile', e.target.value)}
+                    className={`w-full px-4 py-3 md:px-5 md:py-4 bg-slate-50 border rounded-xl md:rounded-2xl outline-none focus:ring-4 transition-all font-bold text-slate-800 text-sm md:text-base ${errors.mobile ? 'border-rose-300 focus:ring-rose-100' : 'border-slate-200 focus:ring-teal-50'}`}
+                    placeholder="e.g. +91 98765 43210"
+                  />
+                  {errors.mobile && (
+                    <span className="text-xs text-rose-500 font-bold block mt-1 ml-1">
+                      ⚠️ {errors.mobile}
+                    </span>
+                  )}
                 </div>
                 
                 <div className="space-y-1.5 md:space-y-2">
                   <label className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Inquiry Subject</label>
                   <select 
                     value={formData.subject}
-                    onChange={(e) => setFormData({...formData, subject: e.target.value})}
+                    onChange={(e) => handleInputChange('subject', e.target.value)}
                     className="w-full px-4 py-3 md:px-5 md:py-4 bg-slate-50 border border-slate-200 rounded-xl md:rounded-2xl outline-none focus:ring-4 ring-teal-50 transition-all font-bold text-slate-800 appearance-none text-sm md:text-base"
                   >
                     <option>General Inquiry</option>
@@ -136,10 +293,31 @@ const ContactUs: React.FC = () => {
                     required
                     rows={5}
                     value={formData.message}
-                    onChange={(e) => setFormData({...formData, message: e.target.value})}
-                    className="w-full px-4 py-3 md:px-5 md:py-4 bg-slate-50 border border-slate-200 rounded-2xl md:rounded-3xl outline-none focus:ring-4 ring-teal-50 transition-all font-medium text-slate-800 resize-none text-sm md:text-base"
+                    onChange={(e) => handleInputChange('message', e.target.value)}
+                    className={`w-full px-4 py-3 md:px-5 md:py-4 bg-slate-50 border rounded-2xl md:rounded-3xl outline-none focus:ring-4 transition-all font-medium text-slate-800 resize-none text-sm md:text-base ${errors.message ? 'border-rose-300 focus:ring-rose-100' : 'border-slate-200 focus:ring-teal-50'}`}
                     placeholder="Tell us how we can help..."
                   />
+                  {errors.message && (
+                    <span className="text-xs text-rose-500 font-bold block mt-1 ml-1">
+                      ⚠️ {errors.message}
+                    </span>
+                  )}
+                </div>
+
+                {/* Cloudflare Turnstile anti-bot verification container */}
+                <div className="space-y-2">
+                  <label className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                    Security Verification
+                  </label>
+                  <div 
+                    id="turnstile-container" 
+                    className="flex justify-start min-h-[65px]"
+                  ></div>
+                  {turnstileError && (
+                    <p className="text-xs text-rose-500 font-bold bg-rose-50 border border-rose-100 rounded-xl px-4 py-3 animate-pulse">
+                      ⚠️ {turnstileError}
+                    </p>
+                  )}
                 </div>
 
                 <button 

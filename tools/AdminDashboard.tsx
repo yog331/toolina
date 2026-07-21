@@ -13,6 +13,7 @@ interface Feedback {
   type?: string;
   date: string;
   status: 'New' | 'Assigned' | 'Resolved';
+  mobile?: string;
 }
 
 interface Announcement {
@@ -316,6 +317,7 @@ const AdminDashboard: React.FC = () => {
                        <p className="text-[10px] text-slate-400 font-medium mb-2">
                          <span className="text-slate-700">{f.user}</span> 
                          {f.email && <span className="mx-1">• <a href={`mailto:${f.email}`} className="hover:text-teal-600">{f.email}</a></span>} 
+                         {f.mobile && <span className="mx-1">• <span className="text-slate-600 font-bold">📞 {f.mobile}</span></span>}
                          <span className="opacity-60 mx-1">• {f.date}</span>
                        </p>
                        {f.message && (

@@ -20,25 +20,45 @@ root.render(
 );
 
 // Register Service Worker for PWA support
-if ('serviceWorker' in navigator && (import.meta.env.PROD)) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then((registration) => {
-        console.log('ServiceWorker registration successful with scope: ', registration.scope);
-      })
-      .catch((err) => {
-        console.error('ServiceWorker registration failed: ', err);
-      });
-  });
-} else if ('serviceWorker' in navigator) {
-  // In development, we can still register it to test offline features if desired
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then((registration) => {
-        console.log('ServiceWorker registered in development mode: ', registration.scope);
-      })
-      .catch((err) => {
-        console.warn('ServiceWorker dev registration failed: ', err);
-      });
-  });
+if ('serviceWorker' in navigator) {
+  if (import.meta.env.PROD) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then((registration) => {
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        })
+        .catch((err) => {
+          console.error('ServiceWorker registration failed: ', err);
+        });
+    });
+  } else {
+    // Unregister active service workers in development to prevent caching issues
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      let unregisteredAny = false;
+      for (const registration of registrations) {
+        registration.unregister().then((success) => {
+          if (success) {
+            console.log('Successfully unregistered active service worker in development mode.');
+            unregisteredAny = true;
+          }
+        });
+      }
+      if (unregisteredAny) {
+        // Clear caches too
+        if ('caches' in window) {
+          caches.keys().then((names) => {
+            for (const name of names) {
+              caches.delete(name);
+            }
+          });
+        }
+        // Force reload to ensure clean network requests without service worker interception
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
+      }
+    }).catch((err) => {
+      console.warn('Error fetching service worker registrations:', err);
+    });
+  }
 }

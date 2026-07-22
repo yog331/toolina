@@ -49,13 +49,34 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preload" href="/font/DevLys-010.ttf" as="font" type="font/ttf" crossorigin>
     <style>
         @font-face {
             font-family: 'DevLys010';
-            src: url('/font/DevLys-010.ttf') format('truetype');
+            src: url('/font/DevLys-010.ttf') format('truetype'),
+                 url('font/DevLys-010.ttf') format('truetype'),
+                 url('./font/DevLys-010.ttf') format('truetype');
             font-weight: normal;
             font-style: normal;
-            font-display: block; /* Use block to ensure it waits for the font */
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Kruti Dev 010';
+            src: url('/font/DevLys-010.ttf') format('truetype'),
+                 url('font/DevLys-010.ttf') format('truetype'),
+                 url('./font/DevLys-010.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'KrutiDev010';
+            src: url('/font/DevLys-010.ttf') format('truetype'),
+                 url('font/DevLys-010.ttf') format('truetype'),
+                 url('./font/DevLys-010.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
         }
 
         html {
@@ -90,12 +111,12 @@
         
         /* Font utility classes */
         .font-devlys {
-            font-family: 'DevLys010', 'Courier New', Courier, monospace !important;
+            font-family: 'DevLys010', 'Kruti Dev 010', 'KrutiDev010', 'Courier New', Courier, monospace !important;
         }
 
         /* Force font for textareas with this class */
         textarea.font-devlys {
-            font-family: 'DevLys010', serif !important;
+            font-family: 'DevLys010', 'Kruti Dev 010', 'KrutiDev010', serif !important;
         }
     </style>
 <link rel="stylesheet" href="/index.css">

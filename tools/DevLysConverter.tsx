@@ -7,6 +7,7 @@ import { unicodeToDevlys } from '../src/lib/unicodeToDevlys';
 import * as mammoth from 'mammoth';
 import SEO from '../components/SEO';
 import StarRatingWidget from '../components/StarRatingWidget';
+import AdUnit from '../components/AdUnit';
 
 interface CharMapItem {
   key: string;
@@ -60,10 +61,14 @@ const CHAR_MAP: Record<string, CharMapItem[]> = {
   ]
 };
 
-const DevLysConverter: React.FC = () => {
+interface DevLysConverterProps {
+  defaultDirection?: 'devlysToUnicode' | 'unicodeToDevlys';
+}
+
+const DevLysConverter: React.FC<DevLysConverterProps> = ({ defaultDirection }) => {
   const [ratingInfo, setRatingInfo] = useState<{rating: number, count: number}>({ rating: 4.9, count: 366 });
 
-    const [input, setInput] = useState('');
+  const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const [isCopying, setIsCopying] = useState(false);
   const [fontLoaded, setFontLoaded] = useState(false);
@@ -97,7 +102,7 @@ const DevLysConverter: React.FC = () => {
     checkFont();
   }, []);
 
-  const convertText = useCallback((text: string, direction = conversionDirection) => {
+  const convertText = useCallback((text: string, direction: 'devlysToUnicode' | 'unicodeToDevlys') => {
     if (!text.trim()) {
       setOutput('');
       return;
@@ -116,26 +121,28 @@ const DevLysConverter: React.FC = () => {
       console.error("Conversion error:", err);
       setOutput("Error during conversion.");
     }
-  }, [conversionDirection]);
+  }, []);
 
-  // Auto-load draft from localStorage on mount
+  // Auto-load draft from localStorage or prop on mount/change
   useEffect(() => {
     const savedDraft = localStorage.getItem('devlys_draft');
     const savedDirection = localStorage.getItem('devlys_direction') as 'devlysToUnicode' | 'unicodeToDevlys';
     
-    if (savedDirection) {
-      setConversionDirection(savedDirection);
-    }
+    const activeDirection = defaultDirection || savedDirection || 'devlysToUnicode';
+    setConversionDirection(activeDirection);
     
     if (savedDraft) {
       setInput(savedDraft);
-      convertText(savedDraft, savedDirection || 'devlysToUnicode');
+      convertText(savedDraft, activeDirection);
+    } else {
+      setInput('');
+      setOutput('');
     }
-  }, [convertText]);
+  }, [defaultDirection, convertText]);
 
   const handleInputChange = (val: string) => {
     setInput(val);
-    convertText(val);
+    convertText(val, conversionDirection);
     localStorage.setItem('devlys_draft', val);
   };
   
@@ -215,14 +222,24 @@ const DevLysConverter: React.FC = () => {
   return (
     <article className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-20 px-1">
       <SEO 
-        title="DevLys to Unicode Converter - Free Online Font Tool | Toolina" 
-        description="Convert DevLys 010 and Kruti Dev legacy Hindi fonts to standard Unicode (Mangal) instantly. Supports .txt, .csv, and .docx file uploads. Free online converter."
-        keywords="DevLys to Unicode, krutidev to unicode, hindi font converter, mangal font, devlys 010 converter online, toolina"
-      
+        title={conversionDirection === 'devlysToUnicode' 
+          ? "DevLys 010 to Unicode Converter Online | Devlys ko Unicode me badle | Toolina" 
+          : "Unicode to DevLys 010 Converter Online | Unicode ko Devlys 10 me badle | Toolina"
+        } 
+        description={conversionDirection === 'devlysToUnicode'
+          ? "Convert DevLys 010 and Kruti Dev legacy Remington Hindi fonts to standard Unicode (Mangal font) instantly. Devlys to unicode changer tool free offline."
+          : "Convert standard Unicode (Mangal font) back to legacy DevLys 010 and Kruti Dev 010 legacy Hindi fonts instantly. Unicode to Devlys changer free online."
+        }
+        keywords={conversionDirection === 'devlysToUnicode'
+          ? "DevLys to Unicode, Devlys 010 to Unicode converter, devlys ko unicode me kaise badle, devlys se unicode converter, devlys font to mangal, krutidev to unicode, legacy hindi font converter, toolina"
+          : "Unicode to DevLys, Unicode to Devlys 010 converter, unicode ko devlys me kaise badle, unicode se devlys converter, mangal to devlys, unicode to krutidev, hindi font converter, toolina"
+        }
         structuredData={{
           "@context": "https://schema.org",
           "@type": "SoftwareApplication",
-          "name": "DevLys to Unicode Converter - Free Online Font Tool",
+          "name": conversionDirection === 'devlysToUnicode' 
+            ? "DevLys 010 to Unicode Converter" 
+            : "Unicode to DevLys 010 Converter",
           "applicationCategory": "DeveloperApplication",
           "operatingSystem": "All",
           "aggregateRating": {
@@ -285,6 +302,8 @@ const DevLysConverter: React.FC = () => {
         </div>
       )}
 
+      <AdUnit slot="devlys-top-banner" format="horizontal" />
+
       <header className="bg-white p-6 md:p-12 rounded-[2.5rem] md:rounded-[3.5rem] border border-slate-200 shadow-2xl shadow-slate-100/50 overflow-hidden relative">
         <div className="absolute top-0 right-0 w-80 h-80 bg-teal-50 rounded-bl-[15rem] -mr-20 -mt-20 opacity-50 blur-3xl"></div>
         
@@ -295,10 +314,16 @@ const DevLysConverter: React.FC = () => {
             </div>
             <div>
               <h1 className="text-2xl md:text-4xl lg:text-5xl font-display font-black text-slate-900 tracking-tight leading-none">
-                DevLys to <span className="text-teal-600">Unicode Converter</span>
+                {conversionDirection === 'devlysToUnicode' ? (
+                  <>DevLys 010 to <span className="text-teal-600">Unicode Converter</span></>
+                ) : (
+                  <>Unicode to <span className="text-teal-600">DevLys 010 Converter</span></>
+                )}
               </h1>
               <p className="text-slate-500 font-medium text-xs md:text-lg mt-1 italic">
-                {conversionDirection === 'devlysToUnicode' ? 'Type or Paste for High-Precision Hindi Conversion' : 'Convert Standard Unicode back to DevLys 10'}
+                {conversionDirection === 'devlysToUnicode' 
+                  ? 'Convert legacy DevLys 010 / Kruti Dev 010 to standard Unicode (Mangal Font)' 
+                  : 'Convert Standard Unicode (Mangal Font) back to legacy DevLys 010 / Kruti Dev 010'}
               </p>
             </div>
           </div>
@@ -416,10 +441,10 @@ const DevLysConverter: React.FC = () => {
                   spellCheck={false}
                />
                {!output && (
-                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-20">
-                    <span className="text-4xl mb-4">🧘‍♂️</span>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Awaiting Conversion</p>
-                 </div>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-20">
+                     <span className="text-4xl mb-4">🧘‍♂️</span>
+                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Awaiting Conversion</p>
+                  </div>
                )}
             </div>
           </section>
@@ -435,25 +460,44 @@ const DevLysConverter: React.FC = () => {
         </div>
       </header>
 
+      <AdUnit slot="devlys-mid-feed" format="fluid" />
+
       <footer className="bg-slate-900 rounded-[3.5rem] p-8 md:p-16 text-white space-y-16 overflow-hidden relative">
         <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_top_right,rgba(20,184,166,0.05),transparent)] pointer-events-none"></div>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 relative z-10">
           <div className="space-y-8">
             <h2 className="text-3xl md:text-5xl font-display font-black tracking-tight leading-tight">
-              Precise <span className="text-teal-400">Hindi Audit</span>
+              Precise <span className="text-teal-400">Hindi Audit & Layout Systems</span>
             </h2>
             <p className="text-slate-400 leading-relaxed text-lg">
-              Our <strong>DevLys to Unicode</strong> tool uses a multi-pass algorithm designed for maximum fidelity. We correctly reorder <em>matras</em> and <em>conjuncts</em> which basic search-and-replace tools often fail to handle, ensuring your official documents remain legible and accurate.
+              Our <strong>DevLys to Unicode</strong> converter utilizes a robust multi-pass character reordering algorithm that correctly re-arranges <em>matras</em> (vowel markers) and complex Sanskrit/Hindi ligatures (<em>sanyukt akshar</em>). Ordinary search-and-replace scripts break document readability; our engine delivers publisher-grade results.
             </p>
+            
+            {/* Added rich Hinglish / English instruction set for extra SEO indexing */}
+            <div className="space-y-4 text-slate-300">
+              <h3 className="text-xl font-bold text-teal-400 uppercase tracking-wide">
+                🔥 DevLys 010 se Unicode convert kaise kare?
+              </h3>
+              <p className="text-sm leading-relaxed text-slate-400">
+                अगर आपके पास कोई ऐसी हिंदी फाइल है जो <strong>DevLys 010 font</strong> या <strong>Kruti Dev 010</strong> में लिखी हुई है और आप उसे WhatsApp, Facebook, या Google Search पर शेयर करना चाहते हैं, तो उसे <strong>Unicode (Mangal Font)</strong> में बदलना आवश्यक है:
+              </p>
+              <ul className="list-disc pl-5 space-y-2 text-sm text-slate-400">
+                <li>अपना पुराना DevLys टेक्स्ट बाएं बॉक्स (Input box) में डालें।</li>
+                <li>हमारा टूल स्वचालित रूप से उस Remington टेक्स्ट को आधुनिक <strong>Standard Mangal Font (यूनिकोड)</strong> में परिवर्तित कर देगा।</li>
+                <li>दाएं बॉक्स से कनवर्टेड यूनिकोड टेक्स्ट को कॉपी करें और कहीं भी इस्तेमाल करें!</li>
+                <li>This is a 100% secure and free offline tool ensuring high confidentiality.</li>
+              </ul>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="bg-white/5 p-6 rounded-3xl border border-white/10">
                 <h3 className="text-teal-400 font-bold text-sm mb-2 uppercase tracking-widest">Matra Logic</h3>
-                <p className="text-[11px] text-slate-500 leading-relaxed">Handles the complex 'i-matra' swap used in Remington layouts for perfect Unicode output.</p>
+                <p className="text-[11px] text-slate-400 leading-relaxed">Handles the complex 'i-matra' swap used in Remington layouts for perfect Unicode output.</p>
               </div>
               <div className="bg-white/5 p-6 rounded-3xl border border-white/10">
                 <h3 className="text-teal-400 font-bold text-sm mb-2 uppercase tracking-widest">Zero Latency</h3>
-                <p className="text-[11px] text-slate-500 leading-relaxed">Client-side processing ensures instant conversion even with massive blocks of text.</p>
+                <p className="text-[11px] text-slate-400 leading-relaxed">Client-side processing ensures instant conversion even with massive blocks of text.</p>
               </div>
             </div>
           </div>
@@ -461,18 +505,19 @@ const DevLysConverter: React.FC = () => {
           <div className="space-y-8">
             <div className="bg-white/5 p-8 rounded-[2.5rem] border border-white/10 backdrop-blur-sm h-fit">
               <h3 className="text-lg font-black uppercase tracking-widest text-slate-300 mb-6 flex items-center gap-3">
-                <span className="text-xl">📊</span> Conversion Knowledge
+                <span className="text-xl">📊</span> Conversion Knowledge & FAQs
               </h3>
               <ul className="space-y-6">
                 {[
-                  { q: "Why use Unicode?", a: "Unicode (Mangal) is the global standard. It makes your Hindi text searchable on Google and readable on all mobile devices without installing specific fonts." },
-                  { q: "How do I type in DevLys?", a: "You can use a standard Remington keyboard layout. For example, typing English keys like 'jktLFkku' will result in 'राजस्थान' in the output box." },
-                  { q: "Is the conversion 100% accurate?", a: "Yes, we use advanced character reordering logic to handle complex Hindi ligatures that simple 'search-and-replace' tools miss." },
-                  { q: "Can I use this for Kruti Dev?", a: "Yes, Kruti Dev 010 and DevLys 010 share nearly identical character maps. You can use this tool for both legacy fonts." }
+                  { q: "DevLys 010 font ko Unicode me kaise badle? (How to convert DevLys 010 to Unicode?)", a: "आप हमारे टूल में अपने देवलीस टेक्स्ट को पेस्ट करके उसे तुरंत मंगल यूनिकोड (Mangal Unicode) में बदल सकते हैं। यह पूरी तरह से मुफ्त और सुरक्षित है। Just paste your DevLys 010 text in the input box, select the 'DevLys to Unicode' mode, and get standard Unicode text instantly." },
+                  { q: "What is the difference between DevLys 010 and Mangal Font?", a: "DevLys 010 is a legacy Remington typewriter layout Hindi font which requires a specific font file (.ttf) installed on your system to view. Mangal is a standard Unicode Hindi font pre-installed on all modern devices and web browsers, making it globally readable, searchable, and web-friendly." },
+                  { q: "Unicode ko DevLys 10 font me kaise convert kare? (How to convert Unicode to DevLys 10?)", a: "Simply choose the 'Unicode to DevLys' mode, enter your standard Unicode (Mangal/Aparajita) text, and copy the Remington-compatible DevLys output. You can use this output in any application like Photoshop, MS Word, or PageMaker where DevLys font is selected." },
+                  { q: "Can I convert MS Word .docx files containing Hindi fonts?", a: "Yes! Our tool allows you to upload standard `.docx`, `.txt`, and `.csv` files. It will read the legacy Hindi characters and convert them accurately, saving you hours of manual typing." },
+                  { q: "Is Kruti Dev 010 compatible with this DevLys converter?", a: "Yes, Kruti Dev 010 and DevLys 010 share nearly identical character maps. You can use this converter to convert Kruti Dev to Unicode and Unicode to Kruti Dev seamlessly." }
                 ].map((item, i) => (
                   <li key={i} className="space-y-1">
                     <h4 className="text-sm font-bold text-teal-400">{item.q}</h4>
-                    <p className="text-xs text-slate-400 leading-relaxed">{item.a}</p>
+                    <p className="text-xs text-slate-300 leading-relaxed">{item.a}</p>
                   </li>
                 ))}
               </ul>
@@ -480,17 +525,20 @@ const DevLysConverter: React.FC = () => {
           </div>
         </div>
 
-        <div className="pt-12 border-t border-white/10 relative z-10 text-center">
+        <div className="pt-12 border-t border-white/10 relative z-10 text-center space-y-4">
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">PRECISION DATA AUDIT BY TOOLINA AUDIT SYSTEMS</p>
+          <div className="max-w-4xl mx-auto text-xs text-slate-500 leading-relaxed">
+            Keywords: Devlys 010 to Unicode, Unicode to Devlys 010, Krutidev 010 se Unicode converter online free, devlys ko unicode me kaise badle, unicode font ko devlys 10 me change, Mangal to Devlys converter, Hindi font converter Remington, Remington keyboard layout converter.
+          </div>
         </div>
       </footer>
     
-      
-      
+      <AdUnit slot="devlys-bottom-banner" format="horizontal" />
+    
       <AccompanyingText 
-        toolName="Dev Lys Converter"
+        toolName={conversionDirection === 'devlysToUnicode' ? "DevLys to Unicode Converter" : "Unicode to DevLys Converter"}
         howItWorks="This tool uses advanced client-side processing to deliver instant results without sending your data to any external server. Simply input your parameters, and the algorithmic engine processes the data locally in your browser ensuring maximum privacy and speed."
-        whyItsUseful="Whether you are a professional or a casual user, this tool saves you significant time by automating complex calculations and data transformations. It eliminates manual errors and provides a structured, easy-to-read output that you can rely on for your daily tasks."
+        whyItsUseful="Whether you are a professional typist, data entry operator, or a government employee, this tool saves you significant time by automating complex Remington character transformations. It eliminates manual errors and provides a structured, easy-to-read output that you can rely on for your daily tasks."
         faqs={[
           { q: "Is my data secure?", a: "Yes, 100% secure. All processing happens entirely within your browser. We do not store or transmit your inputs to any remote servers." },
           { q: "Is this tool free to use?", a: "Absolutely. Toolina provides this utility completely free of charge with no hidden limits or premium paywalls." },
@@ -500,13 +548,13 @@ const DevLysConverter: React.FC = () => {
   
       <div className="max-w-3xl mx-auto my-8">
         <StarRatingWidget 
-          toolId="devlysconverter" 
+          toolId={conversionDirection === 'devlysToUnicode' ? "devlys-to-unicode" : "unicode-to-devlys"} 
           defaultRating={4.9} 
           defaultCount={366} 
           onRatingChange={(rating, count) => setRatingInfo({ rating, count })} 
         />
       </div>
-      <ShareWidget title="DevLys to Unicode Converter" />
+      <ShareWidget title={conversionDirection === 'devlysToUnicode' ? "DevLys to Unicode Converter" : "Unicode to DevLys Converter"} />
       </article>
   );
 };

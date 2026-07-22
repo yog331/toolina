@@ -31,6 +31,24 @@ export const TOOLS: Tool[] = [
     isNew: false
   },
   {
+    id: 'unicode-devlys',
+    name: 'Unicode to DevLys',
+    description: 'Transform standard Unicode (Mangal) Hindi text back to legacy DevLys 010 / Kruti Dev 010 font layout instantly.',
+    icon: '⌨️',
+    category: 'Utility',
+    path: '/unicode-to-devlys-hindi-font-converter',
+    isNew: false
+  },
+  {
+    id: 'remington-typing',
+    name: 'Remington Typing Tutor',
+    description: 'Practice legacy Remington (DevLys 010 / Kruti Dev) Hindi typing with interactive keyboard layouts, structured lessons, and exam speed testing.',
+    icon: '🎯',
+    category: 'Utility',
+    path: '/remington-hindi-typing-tutor',
+    isNew: true
+  },
+  {
     id: 'emi-calc',
     name: 'EMI Calculator',
     description: 'Calculate monthly loan repayments, total interest, and view detailed amortization schedules for Home, Car, or Personal loans.',

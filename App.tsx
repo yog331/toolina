@@ -8,6 +8,7 @@ import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 import Breadcrumb from './components/Breadcrumb';
 import PWABanner from './components/PWABanner';
+import { RelatedToolsWrapper } from './components/RelatedTools';
 import { TOOLS } from './constants';
 import { Tool } from './types';
 
@@ -40,6 +41,7 @@ const PlaceholderTool = React.lazy(() => import('./tools/PlaceholderTool'));
 const OnlineJsonFormatter = React.lazy(() => import('./tools/OnlineJsonFormatter'));
 const UniversalConverter = React.lazy(() => import('./tools/UniversalConverter'));
 const QuickMath = React.lazy(() => import('./tools/QuickMath'));
+const RemingtonTypingTutor = React.lazy(() => import('./tools/RemingtonTypingTutor'));
 
 // Legal, Support & Admin
 const PrivacyPolicy = React.lazy(() => import('./tools/PrivacyPolicy'));
@@ -154,7 +156,8 @@ const App: React.FC = () => {
                 <Route path="/rajasthan-property-gift-deed-calculator" element={<RajasthanGiftDeed />} />
                 <Route path="/rajasthan-lease-deed-stamp-duty-calculator" element={<RajasthanLeaseDeed />} />
                 <Route path="/loan-emi-calculator-amortization" element={<EMICalculator />} />
-                <Route path="/devlys-to-unicode-hindi-font-converter" element={<DevLysConverter />} />
+                <Route path="/devlys-to-unicode-hindi-font-converter" element={<DevLysConverter defaultDirection="devlysToUnicode" />} />
+                <Route path="/unicode-to-devlys-hindi-font-converter" element={<DevLysConverter defaultDirection="unicodeToDevlys" />} />
                 <Route path="/income-tax-calculator-new-old-regime" element={<IncomeTaxCalculator />} />
                 <Route path="/7th-pay-matrix-rajasthan-government" element={<RajasthanPayMatrix />} />
                 <Route path="/7th-pay-matrix-central-government" element={<CentralPayMatrix />} />
@@ -170,6 +173,7 @@ const App: React.FC = () => {
                 <Route path="/online-json-formatter-and-validator" element={<OnlineJsonFormatter />} />
                 <Route path="/universal-unit-converter" element={<UniversalConverter />} />
                 <Route path="/quick-math-calculator-online" element={<QuickMath />} />
+                <Route path="/remington-hindi-typing-tutor" element={<RemingtonTypingTutor />} />
 
                 {/* Permanent Redirects for Old Slugs to retain SEO Ranking */}
                 <Route path="/age-calc" element={<Navigate to="/chronological-age-calculator" replace />} />
@@ -190,6 +194,7 @@ const App: React.FC = () => {
                 <Route path="/raj-lease-deed" element={<Navigate to="/rajasthan-lease-deed-stamp-duty-calculator" replace />} />
                 <Route path="/emi-calc" element={<Navigate to="/loan-emi-calculator-amortization" replace />} />
                 <Route path="/devlys-unicode" element={<Navigate to="/devlys-to-unicode-hindi-font-converter" replace />} />
+                <Route path="/unicode-devlys" element={<Navigate to="/unicode-to-devlys-hindi-font-converter" replace />} />
                 <Route path="/income-tax-calc" element={<Navigate to="/income-tax-calculator-new-old-regime" replace />} />
                 <Route path="/7th-pay-matrix-rajasthan" element={<Navigate to="/7th-pay-matrix-rajasthan-government" replace />} />
                 <Route path="/7th-pay-matrix-central" element={<Navigate to="/7th-pay-matrix-central-government" replace />} />
@@ -220,6 +225,7 @@ const App: React.FC = () => {
                 <Route path="*" element={<PlaceholderTool />} />
               </Routes>
               </React.Suspense>
+              <RelatedToolsWrapper />
             </div>
             <Footer />
             <PWABanner />

@@ -42,6 +42,7 @@ const OnlineJsonFormatter = React.lazy(() => import('./tools/OnlineJsonFormatter
 const UniversalConverter = React.lazy(() => import('./tools/UniversalConverter'));
 const QuickMath = React.lazy(() => import('./tools/QuickMath'));
 const RemingtonTypingTutor = React.lazy(() => import('./tools/RemingtonTypingTutor'));
+const DifferenceChecker = React.lazy(() => import('./tools/DifferenceChecker'));
 
 // Legal, Support & Admin
 const PrivacyPolicy = React.lazy(() => import('./tools/PrivacyPolicy'));
@@ -174,6 +175,7 @@ const App: React.FC = () => {
                 <Route path="/universal-unit-converter" element={<UniversalConverter />} />
                 <Route path="/quick-math-calculator-online" element={<QuickMath />} />
                 <Route path="/remington-hindi-typing-tutor" element={<RemingtonTypingTutor />} />
+                <Route path="/online-difference-checker-diff-tool" element={<DifferenceChecker />} />
 
                 {/* Permanent Redirects for Old Slugs to retain SEO Ranking */}
                 <Route path="/age-calc" element={<Navigate to="/chronological-age-calculator" replace />} />

@@ -1,17 +1,21 @@
 import React, { useState } from 'react';
 
 interface ShareWidgetProps {
-  title: string;
+  title?: string;
+  toolName?: string;
   text?: string;
+  url?: string;
+  shareUrl?: string;
+  noMargin?: boolean;
 }
 
-const ShareWidget: React.FC<ShareWidgetProps> = ({ title, text }) => {
+const ShareWidget: React.FC<ShareWidgetProps> = ({ title, toolName, text, url, shareUrl, noMargin }) => {
   const [copied, setCopied] = useState(false);
   
-  // Safely get window.location.href if available
-  const currentUrl = typeof window !== 'undefined' ? window.location.href : 'https://toolina.in';
+  const titleToUse = title || toolName || "Tool";
+  const currentUrl = url || shareUrl || (typeof window !== 'undefined' ? window.location.href : 'https://toolina.in');
   
-  const defaultText = text || `Check out this free professional ${title} on Toolina!`;
+  const defaultText = text || `Check out this free professional ${titleToUse} on Toolina!`;
   
   const encodedUrl = encodeURIComponent(currentUrl);
   const encodedText = encodeURIComponent(defaultText + '\n\n');
@@ -23,7 +27,7 @@ const ShareWidget: React.FC<ShareWidgetProps> = ({ title, text }) => {
   };
 
   return (
-    <section className="bg-white border border-slate-200 rounded-[2rem] p-6 md:p-8 text-center mt-12 shadow-sm relative overflow-hidden">
+    <section className={`bg-white border border-slate-200 rounded-[2rem] p-6 md:p-8 text-center shadow-sm relative overflow-hidden ${noMargin ? 'mt-0' : 'mt-12'}`}>
       <div className="absolute top-0 left-0 w-32 h-32 bg-teal-50 rounded-br-[10rem] opacity-50 blur-2xl flex-shrink-0"></div>
       <div className="absolute bottom-0 right-0 w-32 h-32 bg-blue-50 rounded-tl-[10rem] opacity-50 blur-2xl flex-shrink-0"></div>
       

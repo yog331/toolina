@@ -335,5 +335,14 @@ export const TOOLS: Tool[] = [
     category: 'Utility',
     path: '/quick-math-calculator-online',
     isNew: false
+  },
+  {
+    id: 'difference-checker',
+    name: 'Difference Checker',
+    description: 'Compare two text drafts, program codes, or documents with side-by-side or inline highlighting. Secure, fast, and fully client-side.',
+    icon: '✨',
+    category: 'Developer',
+    path: '/online-difference-checker-diff-tool',
+    isNew: true
   }
 ];

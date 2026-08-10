@@ -337,7 +337,15 @@ const RajasthanSalary: React.FC = () => {
     if (isProbationer) {
       let gpfVal = 0;
       if (salary.pensionType === 'GPF') {
-        const num = parseInt(salary.level.replace('L-', '')) || 0;
+        let num = parseInt(salary.level.replace('L-', '')) || 0;
+        if (salary.level.startsWith('AL-')) {
+          const acLevel = salary.level;
+          if (acLevel === 'AL-10') num = 14;
+          else if (acLevel === 'AL-11') num = 15;
+          else if (acLevel === 'AL-12') num = 16;
+          else if (acLevel === 'AL-13A') num = 22;
+          else if (acLevel === 'AL-14') num = 24;
+        }
         if (num >= 1 && num <= 7) gpfVal = 700;
         else if (num >= 8 && num <= 9) gpfVal = 800;
         else if (num >= 10 && num <= 11) gpfVal = 1100;
